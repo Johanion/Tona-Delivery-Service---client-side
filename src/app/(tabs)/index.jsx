@@ -1,22 +1,26 @@
-import { StyleSheet, Text, View, TouchableOpacity, StatusBar } from "react-native";
-import React from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  StatusBar,
+  TextInput,
+  ScrollView
+} from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons, Feather } from "@expo/vector-icons";
 
 import RenderingFeaturesCategories from "../../components/RenderingFeaturesCategories.jsx";
 import featuredCategoriesData from "../../constants/featuredCategoriesData.js";
+import RenderingRestaurants from "../../components/RenderingRestaurants.jsx";
 
 const index = () => {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea}>
-
         {/* status bar */}
-          <StatusBar
-            backgroundColor= "#FFDBB4"
-            barStyle="dark-content"
-          />
+        <StatusBar backgroundColor="#FFDBB4" barStyle="dark-content" />
 
         <LinearGradient
           colors={[
@@ -32,6 +36,8 @@ const index = () => {
           // Exactly bottom center
           style={styles.gradient}
         >
+        <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator= {false}>
+
           {/* page Header */}
           <View style={styles.header}>
             {/* Left Side - Delivery Location */}
@@ -67,12 +73,38 @@ const index = () => {
             </View>
           </View>
 
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+              <Ionicons
+                name="search-outline"
+                size={20}
+                color="rgba(0,0,0,0.4)"
+              />
+
+              <TextInput
+                placeholder="Search restaurants, food, hotels..."
+                placeholderTextColor="rgba(0,0,0,0.4)"
+                style={styles.input}
+              />
+
+              <TouchableOpacity style={styles.filterButton}>
+                <Feather name="sliders" size={18} color="#FF6B00" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* horizontal features */}
-          <View style={{  flex:1, marginTop: 30 }}>
+          <View style={{ flex: 1, marginTop: 10 }}>
             <RenderingFeaturesCategories data={featuredCategoriesData} />
           </View>
 
-          {/* You can add more content below the header here */}
+          {/* Rendering restaurants */}
+          <View style={{ flex: 1, marginTop: 10, marginBottom: 100 }}>
+            <RenderingRestaurants />
+          </View>
+        </ScrollView>
+
         </LinearGradient>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -136,5 +168,42 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 5,
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    marginTop: 15,
+  },
+
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    paddingHorizontal: 15,
+    height: 52,
+
+    // soft premium shadow
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+
+  input: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: "Poppins-Regular",
+    color: "#333",
+    marginLeft: 10,
+  },
+
+  filterButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "#FFF3E8",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

@@ -35,10 +35,8 @@ export default function RootLayout() {
           <Stack>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(exams)" options={{ headerShown: false }} />
-            <Stack.Screen name="(study)" options={{ headerShown: false }} />
-            <Stack.Screen name="(reset)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tools)" options={{ headerShown: false }} />
+            <Stack.Screen name="(payment)" options={{ headerShown: false }} />
+            <Stack.Screen name="(orders)" options={{ headerShown: false }} />
           </Stack>
     </QueryClientProvider>
 
