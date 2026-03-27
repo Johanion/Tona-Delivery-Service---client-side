@@ -1,117 +1,117 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { TouchableOpacity, Platform, Dimensions } from "react-native";
-import {
-  useSafeAreaInsets,
-  SafeAreaProvider,
-} from "react-native-safe-area-context";
+import { TouchableOpacity, Platform, Dimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 const TabsLayout = () => {
   const insets = useSafeAreaInsets();
   const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-  const TAB_BAR_HEIGHT = SCREEN_HEIGHT * 0.09; // 9% of screen height
+  const TAB_BAR_HEIGHT = 68; // Fixed comfortable height for pill style
 
   return (
-    <SafeAreaProvider>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: "#43a047",
-          tabBarInactiveTintColor: "gray",
-          tabBarStyle: {
-            position: "absolute", // Lift above the bottom
-            paddingTop: 5,
-            bottom: insets.bottom + 12, // Space from bottom
-            marginHorizontal: 10,
-            height: TAB_BAR_HEIGHT, // Taller for pill effect
-            borderRadius: TAB_BAR_HEIGHT / 3, // Rounded corners
-            backgroundColor: "#fff" ,
-            ...Platform.select({
-              ios: {
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.1,
-                shadowRadius: 10,
-              },
-              android: {
-                elevation: 10,
-              },
-            }),
-          },
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: "#FF6B00", // Vibrant orange
+        tabBarInactiveTintColor: "#888888",
+
+        // Custom floating pill tab bar
+        tabBarStyle: {
+          position: "absolute",
+          bottom: insets.bottom + 12,
+          left: 16,
+          right: 16,
+          height: TAB_BAR_HEIGHT,
+          borderRadius: 25, // Fully pill-shaped
+          backgroundColor: "rgba(255, 255, 255, 0.95)", // Semi-transparent white
+          borderWidth: 1,
+          borderColor: "rgba(255, 107, 0, 0.1)",
+          shadowColor: "#FF6B00",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.15,
+          shadowRadius: 20,
+          elevation: 15, // Strong shadow on Android
+          paddingHorizontal: 8,
+          paddingBottom: 0,
+          marginHorizontal: 15
+        },
+
+        tabBarItemStyle: {
+          paddingVertical: 8,
+        },
+
+        // Use custom button for better press effect
+        tabBarButton: (props) => (
+          <TouchableOpacity
+            {...props}
+            activeOpacity={0.7}
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          />
+        ),
+      }}
+    >
+      {/* Home */}
+      <Tabs.Screen
+        name="index"
+        options={{
+          tabBarLabel: "Home",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={26}
+              color={color}
+            />
+          ),
         }}
-      >
-        {/* home tabs */}
-        <Tabs.Screen
-          name="index"
-          options={{
-            tabBarLabel: "Home",
-            tabBarIcon: ({ color }) => (
-              <Ionicons
-                name="home"
-                size={TAB_BAR_HEIGHT * 0.35}
-                color={color}
-              />
-            ),
-            tabBarButton: (props) => (
-              <TouchableOpacity {...props} activeOpacity={1} />
-            ),
-          }}
-        />
+      />
 
-        {/* quiz tabs  */}
-       <Tabs.Screen
-          name="order"
-          options={{
-            tabBarLabel: "Orders",
-            tabBarIcon: ({ color }) => (
-              <Ionicons
-                name="document-text-outline"
-                size={TAB_BAR_HEIGHT * 0.35}
-                color={color}
-              />
-            ),
-            tabBarButton: (props) => (
-              <TouchableOpacity {...props} activeOpacity={1} />
-            ),
-          }}
-        />
+      {/* Orders */}
+      <Tabs.Screen
+        name="order"
+        options={{
+          tabBarLabel: "Orders",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "receipt" : "receipt-outline"}
+              size={26}
+              color={color}
+            />
+          ),
+        }}
+      />
 
-        {/* tool kit */}
-        <Tabs.Screen
-          name="favourite"
-          options={{
-            tabBarLabel: "Favourites",
-            tabBarIcon: ({ color }) => (
-              <Ionicons
-                name="briefcase"
-                size={TAB_BAR_HEIGHT * 0.35}
-                color={color}
-              />
-            ),
-            tabBarButton: (props) => (
-              <TouchableOpacity {...props} activeOpacity={1} />
-            ),
-          }}
-        />
-        {/* profile */}
-        <Tabs.Screen
-          name="profile"
-          options={{
-            tabBarLabel: "profile",
-            tabBarIcon: ({ color }) => (
-              <Ionicons
-                name="person-circle-outline"
-                size={TAB_BAR_HEIGHT * 0.35}
-                color={color}
-              />
-            ),
-            tabBarButton: (props) => (
-              <TouchableOpacity {...props} activeOpacity={1} />
-            ),
-          }}
-        />
-      </Tabs>
-    </SafeAreaProvider>
+      {/* Favourites */}
+      <Tabs.Screen
+        name="favourite"
+        options={{
+          tabBarLabel: "Favourites",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "heart" : "heart-outline"}
+              size={26}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      {/* Profile */}
+      <Tabs.Screen
+        name="profile"
+        options={{
+          tabBarLabel: "Profile",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={26}
+              color={color}
+            />
+          ),
+        }}
+      />
+    </Tabs>
   );
 };
 

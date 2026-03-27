@@ -41,5 +41,6 @@ export default function RootLayout() {
             <Stack.Screen name="(tools)" options={{ headerShown: false }} />
           </Stack>
     </QueryClientProvider>
+
   );
 }

@@ -1,4 +1,4 @@
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import TabsLayout from "../../providers/TabsLayout.jsx"; // your existing TabsLayout
 
 export default function RootLayout() {
