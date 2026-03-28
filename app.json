@@ -19,6 +19,11 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
+      "config": {
+           "googleMaps": {
+            "apiKey": "fa45f76a49373539d34333efd273c89f30787913c685d632880b4563844238b8"
+           }
+      },
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -26,6 +31,14 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "expo-maps",
+        {
+          "requestLocationPermission": true,
+          "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
+        }
+      ],
+
       "expo-router",
       [
         "expo-splash-screen",

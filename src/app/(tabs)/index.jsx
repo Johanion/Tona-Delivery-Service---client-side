@@ -7,6 +7,7 @@ import {
   TextInput,
   ScrollView
 } from "react-native";
+import { useState } from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome5, Ionicons, Feather } from "@expo/vector-icons";
@@ -14,13 +15,25 @@ import { FontAwesome5, Ionicons, Feather } from "@expo/vector-icons";
 import RenderingFeaturesCategories from "../../components/RenderingFeaturesCategories.jsx";
 import featuredCategoriesData from "../../constants/featuredCategoriesData.js";
 import RenderingRestaurants from "../../components/RenderingRestaurants.jsx";
+import ConfirmModal from "../../components/ConfirmModal.jsx"
 
 const index = () => {
+  const [isModalon, setIsModalOn] = useState(false)
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea}>
         {/* status bar */}
         <StatusBar backgroundColor="#FFDBB4" barStyle="dark-content" />
+
+        {/* modal component */}
+        {isModalon && (
+           <ConfirmModal 
+             visible= {isModalon} 
+             title ="Do you want to change your adress?" 
+             subtitle="Home . New York" 
+             onCancel={()=>setIsModalOn(false)} 
+             onConfirm = {()=>{console.log("so you want to change your adress")}}/> )}
 
         <LinearGradient
           colors={[
@@ -43,9 +56,9 @@ const index = () => {
             {/* Left Side - Delivery Location */}
             <View style={styles.locationContainer}>
               <View style={styles.locationRow}>
-                <View style={styles.circleIcon}>
+                <TouchableOpacity style={styles.circleIcon} activeOpacity={1} onPress={()=>{setIsModalOn(true)}}>
                   <Ionicons name="location-sharp" size={22} color="#FF6B00" />
-                </View>
+                </TouchableOpacity>
                 <View style={{ marginLeft: 8 }}>
                   <Text style={styles.deliveryText}>Delivery to</Text>
                   <Text style={styles.addressText}>Home • New York</Text>
