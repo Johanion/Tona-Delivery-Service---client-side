@@ -26,19 +26,16 @@ export default function RootLayout() {
     if (error || fontsLoaded) {
       SplashScreen.hideAsync();
     }
-    
   }, [fontsLoaded, error]);
   if (!fontsLoaded && !error) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
-          <Stack>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(payment)" options={{ headerShown: false }} />
-            <Stack.Screen name="(orders)" options={{ headerShown: false }} />
-          </Stack>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(orders)" options={{ headerShown: false }} />
+        <Stack.Screen name="(maps)" options={{ headerShown: false }} />
+      </Stack>
     </QueryClientProvider>
-
   );
 }

@@ -6,6 +6,7 @@ export const getUserLocation = async () => {
   if (status !== "granted") return null;
 
   let loc = await Location.getCurrentPositionAsync({});
+  console.log("loccccccccccccccccccccccccc", loc)
 
   return {
     latitude: loc.coords.latitude,

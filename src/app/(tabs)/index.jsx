@@ -5,20 +5,35 @@ import {
   TouchableOpacity,
   StatusBar,
   TextInput,
-  ScrollView
+  ScrollView,
 } from "react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome5, Ionicons, Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 import RenderingFeaturesCategories from "../../components/RenderingFeaturesCategories.jsx";
 import featuredCategoriesData from "../../constants/featuredCategoriesData.js";
 import RenderingRestaurants from "../../components/RenderingRestaurants.jsx";
-import ConfirmModal from "../../components/ConfirmModal.jsx"
+import ConfirmModal from "../../components/ConfirmModal.jsx";
+
+import GetLocation from "../../components/GetLocation.js";
 
 const index = () => {
-  const [isModalon, setIsModalOn] = useState(false)
+  const [isModalon, setIsModalOn] = useState(false);
+  const [userAdress, setUserAdress] = useState();
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchAddress = async () => {
+      const userRealAdress = await GetLocation();
+      console.log("I got the real user address:", userRealAdress);
+      setUserAdress(userRealAdress);
+    };
+
+    fetchAddress();
+  }, []);
 
   return (
     <SafeAreaProvider>
@@ -28,12 +43,19 @@ const index = () => {
 
         {/* modal component */}
         {isModalon && (
-           <ConfirmModal 
-             visible= {isModalon} 
-             title ="Do you want to change your adress?" 
-             subtitle="Home . New York" 
-             onCancel={()=>setIsModalOn(false)} 
-             onConfirm = {()=>{console.log("so you want to change your adress")}}/> )}
+          <ConfirmModal
+            visible={isModalon}
+            title="Do you want to change your adress?"
+            subtitle={userAdress}
+            onCancel={() => setIsModalOn(false)}
+            onConfirm={() => {
+              setIsModalOn(false);
+              setTimeout(() => {
+                router.push("/MapScreen");
+              }, 150);
+            }}
+          />
+        )}
 
         <LinearGradient
           colors={[
@@ -49,75 +71,88 @@ const index = () => {
           // Exactly bottom center
           style={styles.gradient}
         >
-        <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator= {false}>
-
-          {/* page Header */}
-          <View style={styles.header}>
-            {/* Left Side - Delivery Location */}
-            <View style={styles.locationContainer}>
-              <View style={styles.locationRow}>
-                <TouchableOpacity style={styles.circleIcon} activeOpacity={1} onPress={()=>{setIsModalOn(true)}}>
-                  <Ionicons name="location-sharp" size={22} color="#FF6B00" />
-                </TouchableOpacity>
-                <View style={{ marginLeft: 8 }}>
-                  <Text style={styles.deliveryText}>Delivery to</Text>
-                  <Text style={styles.addressText}>Home • New York</Text>
+          <ScrollView
+            nestedScrollEnabled={true}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* page Header */}
+            <View style={styles.header}>
+              {/* Left Side - Delivery Location */}
+              <View style={styles.locationContainer}>
+                <View style={styles.locationRow}>
+                  <TouchableOpacity
+                    style={styles.circleIcon}
+                    activeOpacity={1}
+                    onPress={() => {
+                      setIsModalOn(true);
+                    }}
+                  >
+                    <Ionicons name="location-sharp" size={22} color="#FF6B00" />
+                  </TouchableOpacity>
+                  <View style={{ marginLeft: 8, flex: 1, overflow: "hidden" }}>
+                    <Text style={styles.deliveryText}>Delivery to</Text>
+                    <Text
+                      style={styles.addressText}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {userAdress}
+                    </Text>
+                  </View>
                 </View>
+              </View>
+
+              {/* Right Side - Icons */}
+              <View style={styles.iconsContainer}>
+                <TouchableOpacity style={styles.iconButton}>
+                  <View style={styles.circleIcon}>
+                    <FontAwesome5 name="bell" size={24} color="#333" />
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.iconButton}>
+                  <View style={styles.circleIcon}>
+                    <FontAwesome5
+                      name="shopping-cart"
+                      size={22}
+                      color="#FF6B00"
+                    />
+                  </View>
+                </TouchableOpacity>
               </View>
             </View>
 
-            {/* Right Side - Icons */}
-            <View style={styles.iconsContainer}>
-              <TouchableOpacity style={styles.iconButton}>
-                <View style={styles.circleIcon}>
-                  <FontAwesome5 name="bell" size={24} color="#333" />
-                </View>
-              </TouchableOpacity>
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+              <View style={styles.searchBar}>
+                <Ionicons
+                  name="search-outline"
+                  size={20}
+                  color="rgba(0,0,0,0.4)"
+                />
 
-              <TouchableOpacity style={styles.iconButton}>
-                <View style={styles.circleIcon}>
-                  <FontAwesome5
-                    name="shopping-cart"
-                    size={22}
-                    color="#FF6B00"
-                  />
-                </View>
-              </TouchableOpacity>
+                <TextInput
+                  placeholder="Search restaurants, food, hotels..."
+                  placeholderTextColor="rgba(0,0,0,0.4)"
+                  style={styles.input}
+                />
+
+                <TouchableOpacity style={styles.filterButton}>
+                  <Feather name="sliders" size={18} color="#FF6B00" />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
 
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <View style={styles.searchBar}>
-              <Ionicons
-                name="search-outline"
-                size={20}
-                color="rgba(0,0,0,0.4)"
-              />
-
-              <TextInput
-                placeholder="Search restaurants, food, hotels..."
-                placeholderTextColor="rgba(0,0,0,0.4)"
-                style={styles.input}
-              />
-
-              <TouchableOpacity style={styles.filterButton}>
-                <Feather name="sliders" size={18} color="#FF6B00" />
-              </TouchableOpacity>
+            {/* horizontal features */}
+            <View style={{ flex: 1, marginTop: 10 }}>
+              <RenderingFeaturesCategories data={featuredCategoriesData} />
             </View>
-          </View>
 
-          {/* horizontal features */}
-          <View style={{ flex: 1, marginTop: 10 }}>
-            <RenderingFeaturesCategories data={featuredCategoriesData} />
-          </View>
-
-          {/* Rendering restaurants */}
-          <View style={{ flex: 1, marginTop: 10, marginBottom: 100 }}>
-            <RenderingRestaurants />
-          </View>
-        </ScrollView>
-
+            {/* Rendering restaurants */}
+            <View style={{ flex: 1, marginTop: 10, marginBottom: 100 }}>
+              <RenderingRestaurants />
+            </View>
+          </ScrollView>
         </LinearGradient>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -164,6 +199,7 @@ const styles = StyleSheet.create({
   iconsContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginLeft: 9,
   },
   iconButton: {
     padding: 10,
