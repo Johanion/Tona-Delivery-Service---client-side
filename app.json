@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.zionohannes.Tona_Delivery_ServiceClient_side" 
+      "bundleIdentifier": "com.zionohannes.Tona_Delivery_ServiceClient_side"
     },
     "android": {
       "package": "com.zionohannes.Tona_Delivery_ServiceClient_side",
@@ -56,7 +56,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

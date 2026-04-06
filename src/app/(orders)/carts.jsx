@@ -131,7 +131,7 @@ const Carts = () => {
               style={[styles.optionBtn, styles.chapaBtn]}
               onPress={() => {
                 setVisible(false);
-                router.push("./chapa");
+                router.push("../chapa");
               }}
             >
               {/* Modern Recommended Badge */}

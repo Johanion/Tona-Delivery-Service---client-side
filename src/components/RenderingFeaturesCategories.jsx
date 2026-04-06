@@ -128,7 +128,7 @@ const RenderingFeaturesCategories = ({ data }) => {
               key={index}
               style={[
                 styles.dot,
-                { width, opacity, backgroundColor: "#FF6B00" },
+                {  opacity, backgroundColor: "#FF6B00" },
               ]}
             />
           );
