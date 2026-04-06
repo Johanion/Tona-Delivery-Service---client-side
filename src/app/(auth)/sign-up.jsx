@@ -63,7 +63,7 @@ const Slides = [
 export default function SignUp() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("jdjd");
+  const [fullName, setFullName] = useState("");
 
   const [logLoading, setLogLoading] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);

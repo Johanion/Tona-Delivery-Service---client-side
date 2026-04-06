@@ -19,11 +19,17 @@ import RenderingRestaurants from "../../components/RenderingRestaurants.jsx";
 import ConfirmModal from "../../components/ConfirmModal.jsx";
 
 import GetLocation from "../../components/GetLocation.js";
+import { useAtom } from "jotai";
+import { cartAtom } from "../../atom";
 
 const index = () => {
   const [isModalon, setIsModalOn] = useState(false);
   const [userAdress, setUserAdress] = useState();
   const router = useRouter();
+  const [cart] = useAtom(cartAtom);
+
+  // total quantity (not number of products, but total items)
+  const totalItems = cart.reduce((sum, item) => sum + item.amount, 0);
 
   useEffect(() => {
     const fetchAddress = async () => {
@@ -110,13 +116,25 @@ const index = () => {
                   </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.iconButton}>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => {
+                    router.push("/carts");
+                  }}
+                >
                   <View style={styles.circleIcon}>
                     <FontAwesome5
                       name="shopping-cart"
                       size={22}
                       color="#FF6B00"
                     />
+
+                    {/* 🔴 Badge */}
+                    {totalItems > 0 && (
+                      <View style={styles.cartBadge}>
+                        <Text style={styles.cartBadgeText}>{totalItems}</Text>
+                      </View>
+                    )}
                   </View>
                 </TouchableOpacity>
               </View>

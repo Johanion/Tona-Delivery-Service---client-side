@@ -38,6 +38,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(orders)" options={{ headerShown: false }} />
           <Stack.Screen name="(maps)" options={{ headerShown: false }} />
+          <Stack.Screen name="(payment)" options={{ headerShown: false }} />
         </Stack>
       </AuthProvider>
     </QueryClientProvider>

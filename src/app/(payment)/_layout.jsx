@@ -4,14 +4,14 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 const OrdersLayout = () => {
   return (
-    <SafeAreaProvider>
+    <PaymentLayout>
       <SafeAreaView style={{flex:1}}>
         <Stack>
-          <Stack.Screen name="food_order" options={{ headerShown: false }} />
-          <Stack.Screen name="carts" options={{ headerShown: false }} />
+          <Stack.Screen name="chapa" options={{ headerShown: false }} />
+          <Stack.Screen name="bank" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
-    </SafeAreaProvider>
+    </PaymentLayout>
   );
 };
 

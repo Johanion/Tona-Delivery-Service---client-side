@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
 
   // ← New wrapper with fixed height
   imageContainer: {
+    flex:1,
     alignItems: "center",
     justifyContent: "center",
     padding:10,

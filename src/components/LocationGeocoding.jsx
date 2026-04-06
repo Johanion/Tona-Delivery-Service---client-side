@@ -21,4 +21,4 @@ export const getAddressFromCoords = async (latitude, longitude) => {
   } catch (error) {
     console.log(error)
   }
-};
+};``
