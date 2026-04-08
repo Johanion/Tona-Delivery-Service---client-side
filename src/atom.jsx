@@ -3,7 +3,7 @@ import { atom } from "jotai";
 
 // cartAtom stores an array of objects { id, product info..., amount }
 export const cartAtom = atom([]);
-console.log(cartAtom)
+export const selectedPaymentEnd = atom(null);
 
 // Add a product by ID or increment
 export const addToCartAtom = atom(

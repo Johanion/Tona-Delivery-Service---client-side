@@ -7,7 +7,7 @@ const ChapaScreen = () => {
 
   // 2. Define the payment trigger logic
   const handleAutomaticPayment = async () => {
-    setLoading(true);
+    setLoading(false);
     console.log("ssssssssssssssssssssssssssssssssssssssssssssssssereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
     try {
       // Note: Passing hardcoded '100' and 'cart' for test

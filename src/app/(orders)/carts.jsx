@@ -1,5 +1,4 @@
-// src/screens/Carts.jsx
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,17 +8,17 @@ import {
   TouchableOpacity,
   StatusBar,
   Platform,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState, useEffect } from "react";
 import { useAtom } from "jotai";
 import { useRouter } from "expo-router";
-
 import Modal from "react-native-modal";
-import { MaterialIcons } from "@expo/vector-icons";
-import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialIcons, Ionicons, Feather } from "@expo/vector-icons";
+import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom.jsx";
+
+const { width } = Dimensions.get("window");
 
 const Carts = () => {
   const [cart] = useAtom(cartAtom);
@@ -33,135 +32,198 @@ const Carts = () => {
     0,
   );
 
-  const renderItem = ({ item }) => {
-    return (
-      <SafeAreaProvider>
-        <SafeAreaView style={styles.container}>
-          <View style={styles.card}>
-            <Image source={{ uri: item.image }} style={styles.image} />
-            <View style={styles.info}>
-              <Text style={styles.productName}>{item.product_name}</Text>
-              <Text style={styles.restaurant}>{item.name}</Text>
-              <Text style={styles.price}>${item.price * item.amount}</Text>
-
-              <View style={styles.counterContainer}>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => removeFromCart(item.id)}
-                >
-                  <Text style={styles.counterText}>-</Text>
-                </TouchableOpacity>
-                <Text style={styles.quantityText}>{item.amount}</Text>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => addToCart(item)}
-                >
-                  <Text style={styles.counterText}>+</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeFromCart(item.id)}
-              >
-                <Text style={styles.removeText}>Remove</Text>
-              </TouchableOpacity>
-            </View>
+  const renderItem = ({ item }) => (
+    <View style={styles.card}>
+      <Image source={{ uri: item.image }} style={styles.image} />
+      <View style={styles.info}>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.productName} numberOfLines={1}>
+              {item.product_name}
+            </Text>
+            <Text style={styles.restaurant}>{item.name}</Text>
           </View>
-        </SafeAreaView>
-      </SafeAreaProvider>
-    );
-  };
+          <TouchableOpacity
+            onPress={() => removeFromCart(item.id)}
+            style={styles.trashBtn}
+          >
+            <Feather name="trash-2" size={16} color="#FF3B5C" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Added: Beautifully Styled Description */}
+        <Text style={styles.description} numberOfLines={2}>
+          {item.description ||
+            "Freshly prepared with the finest ingredients, delivered hot to your door."}
+        </Text>
+
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>Birr {item.price.toFixed(2)}</Text>
+
+          <View style={styles.counterContainer}>
+            <TouchableOpacity
+              style={styles.counterBtn}
+              onPress={() => removeFromCart(item.id)}
+            >
+              <Feather name="minus" size={14} color="#1A1A1A" />
+            </TouchableOpacity>
+
+            <Text style={styles.quantityText}>{item.amount}</Text>
+
+            <TouchableOpacity
+              style={styles.counterBtn}
+              onPress={() => addToCart(item)}
+            >
+              <Feather name="plus" size={14} color="#1A1A1A" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
 
   if (cart.length === 0) {
     return (
-      <SafeAreaProvider>
-        <SafeAreaView style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Your cart is empty 😔</Text>
-        </SafeAreaView>
-      </SafeAreaProvider>
+      <SafeAreaView style={styles.emptyContainer}>
+        <View style={styles.emptyIconCircle}>
+          <Feather name="shopping-bag" size={50} color="#FF3B5C" />
+        </View>
+        <Text style={styles.emptyTitle}>Your cart is empty</Text>
+        <Text style={styles.emptySub}>
+          Looks like you haven't added anything yet.
+        </Text>
+        <TouchableOpacity
+          style={styles.shopNowBtn}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.shopNowText}>Start Ordering</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-        <FlatList
-          data={cart}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        <StatusBar barStyle="dark-content" />
 
         <LinearGradient
-          colors={["#ff6b81", "#ff3b5c"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.checkoutContainer}
+          colors={["#FFDBB4", "#FFF5EB", "#FFFFFF"]}
+          style={styles.gradient}
         >
-          <Text style={styles.totalText}>Total: ${totalPrice}</Text>
-          <TouchableOpacity
-            style={styles.checkoutButton}
-            onPress={() => {
-              setVisible(true);
-            }}
-          >
-            <Text style={styles.checkoutButtonText}>Checkout</Text>
-          </TouchableOpacity>
-        </LinearGradient>
+          {/* Refined Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButtonCircle}
+            >
+              <Feather name="chevron-left" size={24} color="#1A1A1A" />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.headerTitle}>My Cart</Text>
+              <Text style={styles.headerSub}>{cart.length} items selected</Text>
+            </View>
+          </View>
 
-        {/* choose payment method */}
-        <Modal
-          isVisible={visible}
-          onBackdropPress={() => setVisible(false)}
-          animationIn="fadeInUp"
-          animationOut="fadeOutDown"
-          backdropOpacity={0.5}
-        >
-          <View style={styles.modalContent}>
-            <View style={styles.iconBox}>
-              <Ionicons name={"alert-circle"} size={32} color="#FF6B00" />
+          <FlatList
+            data={cart}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+
+          {/* Premium Footer */}
+          <View style={styles.footer}>
+            <View style={styles.totalRow}>
+              <View>
+                <Text style={styles.totalLabel}>Grand Total</Text>
+              </View>
+              <Text style={styles.totalAmount}>
+                Birr {totalPrice.toFixed(2)}
+              </Text>
             </View>
 
-            <Text style={styles.modalTitle}>Choose payment Mode</Text>
-
             <TouchableOpacity
-              style={[styles.optionBtn, styles.chapaBtn]}
-              onPress={() => {
-                setVisible(false);
-                router.push("../chapa");
-              }}
+              activeOpacity={0.9}
+              onPress={() => setVisible(true)}
             >
-              {/* Modern Recommended Badge */}
-              <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>RECOMMENDED</Text>
-              </View>
-
-              <MaterialIcons name="play-arrow" size={22} color="#FFF" />
-              <Text style={styles.optionText}>Use Chapa</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.optionBtn, styles.bankStyle]}
-              onPress={() => {
-                setVisible(false);
-                router.push("./bank");
-              }}
-            >
-              <MaterialIcons name="schedule" size={22} color="#FFF" />
-              <Text style={styles.optionText}>Use Bank Payment</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelBtn}
-              onPress={() => setVisible(false)}
-            >
-              <Text style={styles.cancelText}>Cancel</Text>
+              <LinearGradient
+                colors={["#FF4B68", "#FF3B5C"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.checkoutBtn}
+              >
+                <Text style={styles.checkoutBtnText}>Checkout Now</Text>
+                <View style={styles.btnIconBg}>
+                  <Feather name="arrow-right" size={18} color="#FF3B5C" />
+                </View>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
-        </Modal>
+
+          {/* Payment Modal stays same as previous high-quality version */}
+          <Modal
+            isVisible={visible}
+            onBackdropPress={() => setVisible(false)}
+            backdropOpacity={0.3}
+            style={styles.modal}
+            onSwipeComplete={() => setVisible(false)}
+            swipeDirection="down"
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHandle} />
+              <Text style={styles.modalTitle}>Payment Method</Text>
+              <TouchableOpacity
+                style={styles.paymentOption}
+                onPress={() => {
+                  setVisible(false);
+                  router.push("../chapa");
+                }}
+              >
+                <View
+                  style={[styles.paymentIcon, { backgroundColor: "#6c5ce7" }]}
+                >
+                  <Ionicons name="flash" size={24} color="#FFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.paymentName}>Chapa</Text>
+                  <Text style={styles.paymentSub}>Secure Instant Pay</Text>
+                </View>
+                <View style={styles.miniBadge}>
+                  <Text style={styles.miniBadgeText}>Reccommended</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.paymentOption}
+                onPress={() => {
+                  setVisible(false);
+                  router.push("../(payment)/(bank)/mainPayment");
+                }}
+              >
+                <View
+                  style={[styles.paymentIcon, { backgroundColor: "#4CAF50" }]}
+                >
+                  <MaterialIcons
+                    name="account-balance"
+                    size={24}
+                    color="#FFF"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.paymentName}>Bank Transfer</Text>
+                  <Text style={styles.paymentSub}>Manual Verification</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.closeModal}
+                onPress={() => setVisible(false)}
+              >
+                <Text style={styles.closeModalText}>Go Back</Text>
+              </TouchableOpacity>
+            </View>
+          </Modal>
+        </LinearGradient>
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -170,156 +232,240 @@ const Carts = () => {
 export default Carts;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", marginBottom: 5 },
-  listContent: { padding: 16, paddingBottom: 120 },
-  card: {
-    flexDirection: "row",
-    backgroundColor: "#ffe6e6",
-    borderRadius: 20,
-    marginBottom: 16,
-    overflow: "hidden",
-    elevation: 4,
-  },
-  image: { width: 120, height: 120, borderRadius: 20 },
-  info: { flex: 1, padding: 12 },
-  productName: { fontSize: 18, fontWeight: "700", color: "#111" },
-  restaurant: { fontSize: 14, color: "#ff3b5c", marginBottom: 6 },
-  price: { fontSize: 16, fontWeight: "600", color: "#111", marginBottom: 8 },
-  counterContainer: {
+  container: { flex: 1, backgroundColor: "#FFF" },
+  gradient: { flex: 1 },
+
+  // Header Style
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 30,
-    paddingHorizontal: 8,
-    marginBottom: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
   },
-  counterButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: "#ff3b5c",
+  backButtonCircle: {
+    width: 45,
+    height: 45,
+    borderRadius: 25,
+    backgroundColor: "#FFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 15,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#1A1A1A",
+    letterSpacing: -0.5,
+  },
+  headerSub: { fontSize: 13, color: "#666", fontWeight: "500" },
+
+  listContent: { padding: 20, paddingBottom: 180 },
+
+  // Card Styles
+  card: {
+    flexDirection: "row",
+    backgroundColor: "#FFF",
     borderRadius: 20,
-    marginHorizontal: 4,
+    marginBottom: 18,
+    padding: 12,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
   },
-  counterText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  quantityText: { fontSize: 16, fontWeight: "700", marginHorizontal: 6 },
-  removeButton: { marginTop: 4, paddingVertical: 4 },
-  removeText: { color: "#ff3b5c", fontWeight: "700" },
-  checkoutContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 15,
+    backgroundColor: "#F8F9FA",
+  },
+  info: { flex: 1, marginLeft: 15, justifyContent: "space-between" },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  productName: { fontSize: 17, fontWeight: "800", color: "#1A1A1A" },
+  restaurant: {
+    fontSize: 12,
+    color: "#FF3B5C",
+    fontWeight: "600",
+    marginTop: 1,
+  },
+
+  // Description Style
+  description: {
+    fontSize: 12,
+    color: "#777",
+    lineHeight: 16,
+    marginVertical: 6,
+  },
+
+  priceRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
   },
-  totalText: { color: "#fff", fontSize: 18, fontWeight: "700" },
-  checkoutButton: {
-    backgroundColor: "#fff",
+  price: { fontSize: 17, fontWeight: "900", color: "#1A1A1A" },
+
+  trashBtn: { padding: 5 },
+
+  counterContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8F9FA",
+    borderRadius: 10,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: "#EEE",
+  },
+  counterBtn: {
+    width: 28,
+    height: 28,
+    backgroundColor: "#FFF",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 2,
+  },
+  quantityText: {
+    fontSize: 14,
+    fontWeight: "800",
+    marginHorizontal: 12,
+    color: "#1A1A1A",
+  },
+
+  // Footer Styles
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    width: width,
+    backgroundColor: "#FFF",
+    paddingHorizontal: 25,
+    paddingTop: 25,
+    paddingBottom: Platform.OS === "ios" ? 40 : 25,
+    borderTopLeftRadius: 35,
+    borderTopRightRadius: 35,
+    elevation: 25,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 25,
+  },
+  totalLabel: {
+    fontSize: 14,
+    color: "#999",
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  totalSub: { fontSize: 11, color: "#BBB", fontWeight: "600" },
+  totalAmount: { fontSize: 26, fontWeight: "900", color: "#1A1A1A" },
+
+  checkoutBtn: {
+    borderRadius: 20,
+    height: 65,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 30,
   },
-  checkoutButtonText: { color: "#ff3b5c", fontWeight: "700", fontSize: 16 },
+  checkoutBtnText: { color: "#FFF", fontWeight: "800", fontSize: 18 },
+  btnIconBg: {
+    width: 35,
+    height: 35,
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  // Empty State
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#FFF",
   },
-  emptyText: { fontSize: 18, fontWeight: "600", color: "#666" },
-  modalContent: {
-    backgroundColor: "#fff",
-    padding: 28,
-    borderRadius: 24,
+  emptyIconCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#FFF0F2",
+    justifyContent: "center",
     alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.25,
-        shadowRadius: 20,
-      },
-      android: { elevation: 16 },
-    }),
-  },
-  modalTitle: {
-    fontFamily: "Poppins-Bold",
-    fontSize: 18,
-    color: "#014421",
     marginBottom: 20,
   },
-  optionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    paddingVertical: 14,
-    borderRadius: 16,
-    marginVertical: 8,
+  emptyTitle: { fontSize: 22, fontWeight: "900", color: "#1A1A1A" },
+  emptySub: { fontSize: 14, color: "#999", marginTop: 5 },
+  shopNowBtn: {
+    marginTop: 30,
+    paddingHorizontal: 40,
+    paddingVertical: 15,
+    borderRadius: 20,
+    backgroundColor: "#1A1A1A",
   },
-  bankStyle: {
-    backgroundColor: "#4CAF50",
-  },
+  shopNowText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
 
-  rightAwayBtn: {
-    backgroundColor: "#4CAF50",
+  // Modal Styles
+  modal: { justifyContent: "flex-end", margin: 0, marginBottom: 30 },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 25,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
   },
-
-  optionText: {
-    color: "#fff",
-    fontFamily: "Poppins-SemiBold",
-    fontSize: 16,
-    marginLeft: 8,
+  modalHandle: {
+    width: 50,
+    height: 5,
+    backgroundColor: "#EEE",
+    borderRadius: 10,
+    alignSelf: "center",
+    marginBottom: 20,
   },
-  cancelBtn: {
-    marginTop: 12,
-    padding: 10,
-  },
-  cancelText: {
-    fontFamily: "Poppins-Medium",
-    fontSize: 15,
-    color: "#666",
-  },
-  iconBox: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#FFF3E8",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  chapaBtn: {
-    position: "relative", // Ensure the button can anchor the badge
-    overflow: "visible", // Allow the badge to pop out slightly if needed
-    backgroundColor: "#6c5ce7",
-  },
-  badgeContainer: {
-    position: "absolute",
-    top: -10, // Pulls it slightly above the button edge
-    right: 10, // Aligns to the right
-    backgroundColor: "#FF3B30", // A modern vibrant red
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#FFF", // White border helps it "pop" against the button
-    zIndex: 10, // Makes sure it stays on top
-    elevation: 5, // Shadow for Android
-    shadowColor: "#000", // Shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  badgeText: {
-    color: "#FFF",
-    fontSize: 9, // Small and clean
-    fontWeight: "800", // Bold weight
-    letterSpacing: 0.5, // Modern spacing
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#1A1A1A",
+    marginBottom: 25,
     textAlign: "center",
   },
+  paymentOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+    borderRadius: 22,
+    backgroundColor: "#FBFBFB",
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
+  },
+  paymentIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 15,
+  },
+  paymentName: { fontSize: 17, fontWeight: "800", color: "#1A1A1A" },
+  paymentSub: { fontSize: 12, color: "#999", marginTop: 2 },
+  miniBadge: {
+    backgroundColor: "red",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  miniBadgeText: { color: "#FFF", fontSize: 10, fontWeight: "900" },
+  closeModal: { marginTop: 10, padding: 15, alignItems: "center" },
+  closeModalText: { color: "#BBB", fontWeight: "700", fontSize: 15 },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Platform,
   StyleSheet,
@@ -9,129 +9,155 @@ import {
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AppleMaps, GoogleMaps } from "expo-maps";
-import supabase from "../../lib/supabase"; // your Supabase client
+import supabase from "../../lib/supabase"; 
+import { getAddressFromCoords } from "../../components/LocationGeocoding";
+import { useAuth } from "../../providers/AuthProvider";
 
 export default function MapScreen() {
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const { session } = useAuth();
 
-  // Handle map press: only update state
+  // 1. Safe coordinate extraction to fix the "undefined" error
   const handleMapPress = (e) => {
-    const { latitude, longitude } = e.nativeEvent.coordinate;
-    setSelectedLocation({ latitude, longitude });
-    console.log("Selected location:", latitude, longitude);
+    const coords = e.nativeEvent?.coordinate || e.nativeEvent;
+    
+    if (coords && coords.latitude) {
+      setSelectedLocation({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+      console.log("Pin dropped at:", coords.latitude, coords.longitude);
+    }
   };
 
-  // Confirm location and send to Supabase
   const confirmLocation = async () => {
     if (!selectedLocation) {
       Alert.alert("Please select a location first!");
       return;
     }
 
-    // try {
-    //   const { data, error } = await supabase
-    //     .from("profile")
-    //     .update({
-    //       latitude: selectedLocation.latitude,
-    //       longitude: selectedLocation.longitude,
-    //     })
-    //     .eq("id", session.user.id);
+    try {
+      // Get the readable address string
+      const realAdress = await getAddressFromCoords(
+        selectedLocation.latitude,
+        selectedLocation.longitude
+      );
 
-    //   if (error) throw error;
-    //   Alert.alert("Location saved successfully!");
-    //   console.log("Saved location:", data);
-    // } catch (err) {
-    //   Alert.alert("Error saving location", err.message);
-    // }
+      const { data, error } = await supabase
+        .from("adress") // Ensure this matches your DB spelling
+        .update({
+          latitude: selectedLocation.latitude,
+          longitude: selectedLocation.longitude,
+          adress: realAdress,
+        })
+        .eq("id", session.user.id);
+
+      if (error) throw error;
+      Alert.alert("Success", "Delivery location saved!");
+    } catch (err) {
+      Alert.alert("Error", err.message);
+    }
   };
 
-  // Default location (can fetch from DB instead)
-  const locationData = {
+  const defaultLocation = {
     latitude: 9.03,
     longitude: 38.74,
   };
 
   const cameraPositions = {
-    coordinates: {
-      latitude: locationData.latitude,
-      longitude: locationData.longitude,
-    },
+    coordinates: defaultLocation,
     zoom: 15,
   };
 
-  // Confirm buttont UI
+  // Helper component to render the Pin
+  const MapMarkers = () => {
+    if (!selectedLocation) return null;
+    
+    return Platform.OS === "ios" ? (
+      <AppleMaps.Marker coordinate={selectedLocation} title="Deliver here" />
+    ) : (
+      <GoogleMaps.Marker coordinate={selectedLocation} title="Deliver here" />
+    );
+  };
+
   const ConfirmButon = () => (
     <View style={styles.buttonContainer}>
       <TouchableOpacity style={styles.button} onPress={confirmLocation}>
         <Text style={styles.buttonText}>Confirm Location</Text>
       </TouchableOpacity>
       {selectedLocation && (
-        <Text style={styles.selectedText}>
-          Selected: {selectedLocation.latitude.toFixed(5)},{" "}
-          {selectedLocation.longitude.toFixed(5)}
-        </Text>
+        <View style={styles.infoBadge}>
+          <Text style={styles.selectedText}>
+            {selectedLocation.latitude.toFixed(4)}, {selectedLocation.longitude.toFixed(4)}
+          </Text>
+        </View>
       )}
     </View>
   );
 
-  // Render map
-  if (Platform.OS === "ios") {
-    return (
-      <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1 }}>
-          <View style={{ flex: 1, marginBottom: 15 }}>
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          {Platform.OS === "ios" ? (
             <AppleMaps.View
               style={StyleSheet.absoluteFill}
               cameraPosition={cameraPositions}
               onMapClick={handleMapPress}
-            />
-            <ConfirmButon />
-          </View>
-        </SafeAreaView>
-      </SafeAreaProvider>
-    );
-  } else if (Platform.OS === "android") {
-    return (
-      <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1 }}>
-          <View style={{ flex: 1, marginBottom: 70 }}>
+            >
+              <MapMarkers />
+            </AppleMaps.View>
+          ) : (
             <GoogleMaps.View
               style={StyleSheet.absoluteFill}
               cameraPosition={cameraPositions}
               onMapClick={handleMapPress}
-            />
-            <ConfirmButon />
-          </View>
-        </SafeAreaView>
-      </SafeAreaProvider>
-    );
-  } else {
-    return <Text>Maps are only available on Android and iOS</Text>;
-  }
+            >
+              <MapMarkers />
+            </GoogleMaps.View>
+          )}
+          <ConfirmButon />
+        </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
+  );
 }
 
 const styles = StyleSheet.create({
   buttonContainer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 40,
     left: 20,
     right: 20,
     alignItems: "center",
   },
   button: {
     backgroundColor: "#007AFF",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 12,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
   },
+  infoBadge: {
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    padding: 8,
+    borderRadius: 20,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
   selectedText: {
-    marginTop: 8,
     color: "#333",
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

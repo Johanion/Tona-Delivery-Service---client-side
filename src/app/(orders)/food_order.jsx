@@ -7,85 +7,96 @@ import {
   Image,
   TouchableOpacity,
   StatusBar,
+  Platform,
+  Dimensions,
 } from "react-native";
-import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAtom } from "jotai";
 import { useRouter } from "expo-router";
-
-import products from "../../constants/foods"; // your products array
+import { Feather } from "@expo/vector-icons";
+import products from "../../constants/foods";
 import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom";
+
+const { width } = Dimensions.get("window");
 
 const FoodOrder = () => {
   const [cart] = useAtom(cartAtom);
   const [, addToCart] = useAtom(addToCartAtom);
   const [, removeFromCart] = useAtom(removeFromCartAtom);
-  const totalPrice = cart.reduce(
-    (sum, item) => sum + item.amount * item.price,
-    0,
-  );
-  const router = useRouter()
+  const router = useRouter();
+
+  const totalPrice = cart.reduce((sum, item) => sum + item.amount * item.price, 0);
 
   const getQuantity = (productId) => {
     const item = cart.find((p) => p.id === productId);
     return item ? item.amount : 0;
   };
 
-  console.log(totalPrice);
-  console.log(
-    "cart lengthhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh.",
-    cart.length,
-  );
-
   const renderItem = ({ item }) => {
     const quantity = getQuantity(item.id);
 
     return (
       <View style={styles.card}>
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: item.image }}
-            style={styles.image}
-            resizeMode="contain"
-          />
-        </View>
+        <View style={styles.cardContent}>
+          {/* Enhanced Image Section */}
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: item.image }} style={styles.foodImage} />
+            <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.05)"]}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
 
-        <View style={styles.info}>
-          <Text style={styles.restaurant}>{item.name}</Text>
-          <Text style={styles.productName}>{item.product_name}</Text>
-          <Text style={styles.description} numberOfLines={2}>
-            {item.description}
-          </Text>
-
-          <View style={styles.bottomRow}>
-            {quantity === 0 ? (
-              <LinearGradient
-                colors={["#ff6b81", "#ff3b5c"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.addButton}
-              >
-                <TouchableOpacity onPress={() => addToCart(item)}>
-                  <Text style={styles.addButtonText}>+ Add</Text>
-                </TouchableOpacity>
-              </LinearGradient>
-            ) : (
-              <View style={styles.counterContainer}>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => removeFromCart(item.id)}
-                >
-                  <Text style={styles.counterText}>-</Text>
-                </TouchableOpacity>
-                <Text style={styles.quantityText}>{quantity}</Text>
-                <TouchableOpacity
-                  style={styles.counterButton}
-                  onPress={() => addToCart(item)}
-                >
-                  <Text style={styles.counterText}>+</Text>
-                </TouchableOpacity>
+          {/* Detailed Info Section */}
+          <View style={styles.infoWrapper}>
+            <View>
+              <View style={styles.headerRow}>
+                <Text style={styles.categoryLabel}>{item.name}</Text>
+                <View style={styles.ratingBadge}>
+                  <Feather name="star" size={10} color="#FFB800" />
+                  <Text style={styles.ratingText}>4.8</Text>
+                </View>
               </View>
-            )}
+              
+              <Text style={styles.foodTitle} numberOfLines={1}>{item.product_name}</Text>
+              <Text style={styles.foodDescription} numberOfLines={2}>
+                {item.description}
+              </Text>
+            </View>
+
+            <View style={styles.priceActionRow}>
+              <Text style={styles.priceText}>
+                <Text style={styles.currencySymbol}>Birr </Text>
+                {item.price}
+              </Text>
+
+              {quantity === 0 ? (
+                <TouchableOpacity 
+                  onPress={() => addToCart(item)} 
+                  activeOpacity={0.7}
+                  style={styles.addButton}
+                >
+                  <Feather name="plus" size={18} color="#FFF" />
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.counterContainer}>
+                  <TouchableOpacity 
+                    style={styles.counterBtn} 
+                    onPress={() => removeFromCart(item.id)}
+                  >
+                    <Feather name="minus" size={14} color="#121212" />
+                  </TouchableOpacity>
+                  <Text style={styles.counterValue}>{quantity}</Text>
+                  <TouchableOpacity 
+                    style={styles.counterBtn} 
+                    onPress={() => addToCart(item)}
+                  >
+                    <Feather name="plus" size={14} color="#121212" />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           </View>
         </View>
       </View>
@@ -93,164 +104,130 @@ const FoodOrder = () => {
   };
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-        <LinearGradient
-          colors={["#FFF5EB", "#FFEFD6", "#FFE6CC", "#FFDBB4"]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.gradient}
-        >
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Order Your Favorites</Text>
-            <Text style={styles.headerSubtitle}>
-              Delicious meals at your fingertips
-            </Text>
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="dark-content" />
+      <SafeAreaView edges={['top']} style={styles.header}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.welcomeText}>Good afternoon 👋</Text>
+            <Text style={styles.brandTitle}>Deliciously <Text style={styles.accentText}>Yours</Text></Text>
           </View>
-
-          <FlatList
-            data={products}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
-
-          {/* checkout to payment */}
-            <LinearGradient
-              colors={["#ff6b81", "#ff3b5c"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.checkoutContainer}
-            >
-              <Text style={styles.totalText}>Total: ${totalPrice}</Text>
-              <TouchableOpacity style={styles.checkoutButton} onPress={()=>{router.push("./")}}>
-                <Text style={styles.checkoutButtonText}>Checkout</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-        </LinearGradient>
+          <TouchableOpacity style={styles.iconButton}>
+            <Feather name="search" size={22} color="#121212" />
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
-    </SafeAreaProvider>
+
+      <FlatList
+        data={products}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      />
+
+      {cart.length > 0 && (
+        <View style={styles.footerContainer}>
+          <TouchableOpacity 
+            activeOpacity={0.9}
+            style={styles.checkoutBar}
+            onPress={() => router.push("../carts")}
+          >
+            <View style={styles.checkoutLeft}>
+              <View style={styles.cartIconWrapper}>
+                <Feather name="shopping-bag" size={20} color="#FFF" />
+                <View style={styles.badge}><Text style={styles.badgeText}>{cart.length}</Text></View>
+              </View>
+              <View>
+                <Text style={styles.totalLabel}>Total Price</Text>
+                <Text style={styles.totalValue}>Birr {totalPrice.toFixed(2)}</Text>
+              </View>
+            </View>
+            
+            <View style={styles.checkoutBtn}>
+              <Text style={styles.checkoutBtnText}>Checkout</Text>
+              <Feather name="arrow-right" size={18} color="#FF4B68" />
+            </View>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
   );
 };
 
-export default FoodOrder;
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  headerTitle: { fontSize: 28, fontWeight: "700", color: "#111" },
-  headerSubtitle: { fontSize: 15, color: "#666", marginTop: 4 },
-  listContent: { padding: 16, paddingBottom: 120 },
-  card: {
-    backgroundColor: "white",
-    borderRadius: 18,
-    marginBottom: 16,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 5,
-  },
+  mainContainer: { flex: 1, backgroundColor: "#F8F9FB" },
+  
+  // Header Style
+  header: { backgroundColor: '#FFF', borderBottomLeftRadius: 30, borderBottomRightRadius: 30, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10 },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingBottom: 20, paddingTop: 10 },
+  welcomeText: { fontSize: 13, color: '#888', fontWeight: '600', marginBottom: 2 },
+  brandTitle: { fontSize: 24, fontWeight: '800', color: '#121212' },
+  accentText: { color: '#FF4B68' },
+  iconButton: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#F8F9FB', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#F0F0F0' },
 
-  // ← New wrapper with fixed height
-  imageContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 10,
-    width: "100%",
-    height: 160, // same as before
-    backgroundColor: "white",
+  listContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 140 },
+
+  // Card Styling
+  card: {
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    marginBottom: 20,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12 },
+      android: { elevation: 3 },
+    }),
   },
-  image: { width: "100%", height: "100%", borderRadius: 20 },
-  badge: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "#ff3b5c",
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  cardContent: { flexDirection: 'row', flex: 1 },
+  imageContainer: { borderRadius: 18, overflow: 'hidden', backgroundColor: '#F0F0F0' },
+  foodImage: { width: 100, height: 100 },
+
+  infoWrapper: { flex: 1, marginLeft: 16, justifyContent: 'space-between' },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  categoryLabel: { fontSize: 10, fontWeight: '700', color: '#FF4B68', textTransform: 'uppercase', letterSpacing: 0.5 },
+  ratingBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF9E5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  ratingText: { fontSize: 10, fontWeight: '700', color: '#FFB800', marginLeft: 3 },
+  
+  foodTitle: { fontSize: 17, fontWeight: '700', color: '#121212', marginTop: 2 },
+  foodDescription: { fontSize: 12, color: '#7C7C7C', marginTop: 4, lineHeight: 16 },
+
+  priceActionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
+  priceText: { fontSize: 16, fontWeight: '800', color: '#121212' },
+  currencySymbol: { fontSize: 12, color: '#FF4B68' },
+
+  addButton: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
+  
+  counterContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8F9FB', borderRadius: 12, padding: 4 },
+  counterBtn: { width: 28, height: 28, backgroundColor: '#FFF', borderRadius: 8, justifyContent: 'center', alignItems: 'center', elevation: 1 },
+  counterValue: { marginHorizontal: 12, fontSize: 14, fontWeight: '700', color: '#121212' },
+
+  // Floating Bar
+  footerContainer: { position: 'absolute', bottom: 34, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 20 },
+  checkoutBar: {
+    width: '100%',
+    backgroundColor: '#121212',
+    borderRadius: 22,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
   },
-  badgeText: { color: "#fff", fontWeight: "700" },
-  info: { padding: 16 },
-  restaurant: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#ff3b5c",
-    marginBottom: 4,
-  },
-  productName: {
-    fontSize: 19,
-    fontWeight: "700",
-    color: "#111",
-    lineHeight: 24,
-    marginBottom: 6,
-  },
-  description: {
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  bottomRow: { flexDirection: "row", justifyContent: "flex-end" },
-  addButton: {
-    borderRadius: 30,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-  },
-  addButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-  counterContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#ffe6e6",
-    borderRadius: 30,
-    paddingHorizontal: 8,
-  },
-  counterButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: "#ff3b5c",
-    borderRadius: 20,
-    marginHorizontal: 4,
-  },
-  counterText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  quantityText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111",
-    marginHorizontal: 4,
-  },
-  checkoutContainer: {
-    checkoutContainer: {
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: 16,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      elevation: 10, // ✅ Android
-      zIndex: 10, // ✅ iOS
-    },
-  },
-  totalText: { color: "#fff", fontSize: 18, fontWeight: "700" },
-  checkoutButton: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 30,
-  },
-  checkoutButtonText: { color: "#ff3b5c", fontWeight: "700", fontSize: 16 },
+  checkoutLeft: { flexDirection: 'row', alignItems: 'center' },
+  cartIconWrapper: { position: 'relative', marginRight: 15, backgroundColor: 'rgba(255,255,255,0.1)', padding: 10, borderRadius: 15 },
+  badge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#FF4B68', borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#121212' },
+  badgeText: { color: '#FFF', fontSize: 10, fontWeight: '800' },
+  totalLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '600' },
+  totalValue: { color: '#FFF', fontSize: 17, fontWeight: '800' },
+  checkoutBtn: { backgroundColor: '#FFF', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 16 },
+  checkoutBtnText: { color: '#121212', fontWeight: '800', marginRight: 6, fontSize: 14 },
 });
+
+export default FoodOrder;

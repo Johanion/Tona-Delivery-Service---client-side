@@ -118,18 +118,15 @@ const index = () => {
 
                 <TouchableOpacity
                   style={styles.iconButton}
-                  onPress={() => {
-                    router.push("/carts");
-                  }}
+                  onPress={() => router.push("/carts")}
                 >
-                  <View style={styles.circleIcon}>
+                  <View style={styles.iconContainer}>
                     <FontAwesome5
                       name="shopping-cart"
-                      size={22}
+                      size={24} // Slightly larger icon
                       color="#FF6B00"
                     />
 
-                    {/* 🔴 Badge */}
                     {totalItems > 0 && (
                       <View style={styles.cartBadge}>
                         <Text style={styles.cartBadgeText}>{totalItems}</Text>
@@ -272,5 +269,53 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF3E8",
     justifyContent: "center",
     alignItems: "center",
+  },
+  circleIcon: {
+    width: 44,
+    height: 44,
+    backgroundColor: "#fff", // Or your theme color
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    // Important: No overflow hidden here or the badge will be cut off!
+  },
+
+  iconContainer: {
+    width: 50,
+    height: 50,
+    backgroundColor: '#F5F5F5', // Light background to make the orange/red pop
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative', 
+  },
+  cartBadge: {
+    position: 'absolute',
+    // Move it further to the corner
+    top: 2,      
+    right: 2,    
+    backgroundColor: '#FF3B30', 
+    // Increased size for visibility
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    // Thicker white border makes it look "elevated"
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF', 
+    // Add a small shadow for depth
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+  },
+  cartBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11, // Larger text
+    fontWeight: '900', // Extra bold
+    lineHeight: 14, // Centers text vertically better on some devices
   },
 });
