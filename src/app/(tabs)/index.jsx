@@ -21,6 +21,7 @@ import ConfirmModal from "../../components/ConfirmModal.jsx";
 import GetLocation from "../../components/GetLocation.js";
 import { useAtom } from "jotai";
 import { cartAtom } from "../../atom";
+import { supabase } from "../../lib/supabase";
 
 const index = () => {
   const [isModalon, setIsModalOn] = useState(false);
@@ -40,6 +41,10 @@ const index = () => {
 
     fetchAddress();
   }, []);
+
+  const logOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <SafeAreaProvider>
@@ -110,7 +115,12 @@ const index = () => {
 
               {/* Right Side - Icons */}
               <View style={styles.iconsContainer}>
-                <TouchableOpacity style={styles.iconButton}>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => {
+                    logOut();
+                  }}
+                >
                   <View style={styles.circleIcon}>
                     <FontAwesome5 name="bell" size={24} color="#333" />
                   </View>
@@ -283,39 +293,39 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 50,
     height: 50,
-    backgroundColor: '#F5F5F5', // Light background to make the orange/red pop
+    backgroundColor: "#F5F5F5", // Light background to make the orange/red pop
     borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative', 
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
   },
   cartBadge: {
-    position: 'absolute',
+    position: "absolute",
     // Move it further to the corner
-    top: 2,      
-    right: 2,    
-    backgroundColor: '#FF3B30', 
+    top: 2,
+    right: 2,
+    backgroundColor: "#FF3B30",
     // Increased size for visibility
     minWidth: 22,
     height: 22,
     borderRadius: 11,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 4,
     // Thicker white border makes it look "elevated"
     borderWidth: 2.5,
-    borderColor: '#FFFFFF', 
+    borderColor: "#FFFFFF",
     // Add a small shadow for depth
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.5,
   },
   cartBadgeText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 11, // Larger text
-    fontWeight: '900', // Extra bold
+    fontWeight: "900", // Extra bold
     lineHeight: 14, // Centers text vertically better on some devices
   },
 });

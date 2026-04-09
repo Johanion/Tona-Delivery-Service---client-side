@@ -17,11 +17,10 @@ const AuthContext = createContext<AuthData>({ session: null, loading: true });
 
 export default function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSession = async () => {
-      console.log("I am still looking for session!")
       const { data } = await supabase.auth.getSession();
       console.log(data);
       setSession(data.session);

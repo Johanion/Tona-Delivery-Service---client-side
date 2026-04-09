@@ -19,10 +19,10 @@ const GetLocation = async () => {
 
     //2. request user and access their adress
     const reqLocation = await getUserLocation();
-
+    let realAdress = null;
     // get the reverse geocoded adress of location
     if (reqLocation) {
-      const realAdress = await getAddressFromCoords(
+      realAdress = await getAddressFromCoords(
         reqLocation.latitude,
         reqLocation.longitude,
       );

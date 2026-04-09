@@ -7,19 +7,19 @@ import { useAuth } from '../../providers/AuthProvider';   // ← change path if 
 import { ActivityIndicator, View } from 'react-native';
 
 export default function RootLayout() {
-  const { session, loading } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   console.log(session)
 
   // 1. Still checking session from Supabase
-  // if (loading) {
-  //   return (
-  //     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#E0F2ED' }}>
-  //       <ActivityIndicator size="large" color="#239BA7" />
-  //     </View>
-  //   );
-  // }
+  if (authLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#E0F2ED' }}>
+        <ActivityIndicator size="large" color="#239BA7" />
+      </View>
+    );
+  }
 
-  // 2. No session → force back to login (this fixes your logout problem)
+  // 2. No session → force back to login 
   if (!session) {
       return <Redirect href="/log-in" />;  }
 
