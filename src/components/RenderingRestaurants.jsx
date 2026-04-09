@@ -8,11 +8,18 @@ import {
   Platform,
 } from "react-native";
 import React from "react";
-import data from "../constants/restaurants.js";
 import { useRouter } from "expo-router";
+import { useAtom, useSetAtom } from "jotai";
+
+import data from "../constants/restaurants.js";
+import { RestaurantId } from "../atom.jsx";
+import { RestaurantName } from "../atom.jsx";
 
 const RenderingRestaurants = () => {
-    const router = useRouter()
+  const router = useRouter();
+  const setRestaurantId = useSetAtom(RestaurantId);
+  const setRestaurantName = useSetAtom(RestaurantName)
+
   return (
     <FlatList
       data={data}
@@ -25,8 +32,11 @@ const RenderingRestaurants = () => {
           <TouchableOpacity
             style={styles.card}
             activeOpacity={0.9}
-            onPress={() => router.push("../(orders)/food_order")} // optional
-
+            onPress={() => {
+              router.push("../(orders)/food_order");
+              setRestaurantId(item.id);
+              setRestaurantName(item.name)
+            }}
           >
             <View style={styles.imageContainer}>
               <Image
@@ -35,7 +45,7 @@ const RenderingRestaurants = () => {
                 resizeMode="contain"
               />
             </View>
-            
+
             <View style={styles.info}>
               <View style={styles.row}>
                 <Text style={styles.name}>{item.name}</Text>
@@ -43,13 +53,7 @@ const RenderingRestaurants = () => {
               </View>
 
               <Text style={styles.address}>{item.address}</Text>
-
-              <View style={styles.rowBottom}>
-                <Text style={styles.time}>⏱ {item.delivery_time}</Text>
-                <Text style={styles.fee}>{item.delivery_fee}</Text>
-              </View>
             </View>
-
           </TouchableOpacity>
         );
       }}
@@ -73,24 +77,24 @@ const styles = StyleSheet.create({
 
   // ← New wrapper with fixed height
   imageContainer: {
-    flex:1,
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding:10,
+    padding: 10,
     width: "100%",
     height: 160, // same as before
-    backgroundColor: "white", 
+    backgroundColor: "white",
   },
 
   image: {
     width: "100%",
-    height: "100%", 
-    borderRadius: 50
+    height: "100%",
+    borderRadius: 50,
   },
 
   info: {
     padding: 12,
-    backgroundColor: "#FFF5EB"
+    backgroundColor: "#FFF5EB",
   },
 
   row: {
@@ -102,7 +106,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     color: "#111",
-    fontFamily: "Poppins-Bold"
+    fontFamily: "Poppins-Bold",
   },
 
   rating: {
@@ -115,7 +119,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 13,
     color: "#777",
-    fontFamily: "Poppins-Bold"
+    fontFamily: "Poppins-Bold",
   },
 
   rowBottom: {
@@ -127,7 +131,7 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 13,
     color: "#444",
-    fontFamily: "Poppins-Regular"
+    fontFamily: "Poppins-Regular",
   },
 
   fee: {

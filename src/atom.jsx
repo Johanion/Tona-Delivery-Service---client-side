@@ -4,6 +4,8 @@ import { atom } from "jotai";
 // cartAtom stores an array of objects { id, product info..., amount }
 export const cartAtom = atom([]);
 export const selectedPaymentEnd = atom(null);
+export const RestaurantId = atom (null)
+export const RestaurantName = atom (null)
 
 // Add a product by ID or increment
 export const addToCartAtom = atom(

@@ -9,6 +9,7 @@ import {
   StatusBar,
   Platform,
   Dimensions,
+  TextInput
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,6 +18,8 @@ import { useRouter } from "expo-router";
 import Modal from "react-native-modal";
 import { MaterialIcons, Ionicons, Feather } from "@expo/vector-icons";
 import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom.jsx";
+import restaurant from "../../constants/restaurants";
+import { useMemo } from "react";
 
 const { width } = Dimensions.get("window");
 
@@ -27,60 +30,98 @@ const Carts = () => {
   const [visible, setVisible] = useState(false);
   const router = useRouter();
 
+  // get total price for all orders
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.amount * item.price,
     0,
   );
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      <View style={styles.info}>
-        <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.productName} numberOfLines={1}>
-              {item.product_name}
-            </Text>
-            <Text style={styles.restaurant}>{item.name}</Text>
+  // group cart based on the restaurant /memoized/
+  const groupedArray = useMemo(() => {
+    const groupedCart = cart.reduce((acc, item) => {
+      const key = item.restaurant_id;
+
+      if (!acc[key]) acc[key] = [];
+
+      acc[key].push(item);
+      return acc;
+    }, {});
+
+    return Object.entries(groupedCart);
+  }, [cart]);
+
+  const renderItem = ({ item }) => {
+    const restaurantId = item[0];
+    const items = item[1];
+    const restaurantName = restaurant.find((r) => r.id == restaurantId)?.name;
+
+    return (
+      <>
+        {/* Restaurants header */}
+        <View style={styles.restaurantHeader}>
+          <View style={styles.restaurantLeft}>
+            <View style={styles.iconCircle}>
+              <MaterialIcons name="restaurant" size={18} color="#FF3B5C" />
+            </View>
+
+            <View>
+              <Text style={styles.restaurantName}>{restaurantName}</Text>
+              <Text style={styles.restaurantSub}>Restaurant orders</Text>
+            </View>
           </View>
-          <TouchableOpacity
-            onPress={() => removeFromCart(item.id)}
-            style={styles.trashBtn}
-          >
-            <Feather name="trash-2" size={16} color="#FF3B5C" />
-          </TouchableOpacity>
-        </View>
 
-        {/* Added: Beautifully Styled Description */}
-        <Text style={styles.description} numberOfLines={2}>
-          {item.description ||
-            "Freshly prepared with the finest ingredients, delivered hot to your door."}
-        </Text>
-
-        <View style={styles.priceRow}>
-          <Text style={styles.price}>Birr {item.price.toFixed(2)}</Text>
-
-          <View style={styles.counterContainer}>
-            <TouchableOpacity
-              style={styles.counterBtn}
-              onPress={() => removeFromCart(item.id)}
-            >
-              <Feather name="minus" size={14} color="#1A1A1A" />
-            </TouchableOpacity>
-
-            <Text style={styles.quantityText}>{item.amount}</Text>
-
-            <TouchableOpacity
-              style={styles.counterBtn}
-              onPress={() => addToCart(item)}
-            >
-              <Feather name="plus" size={14} color="#1A1A1A" />
-            </TouchableOpacity>
+          <View style={styles.itemBadge}>
+            <Feather name="shopping-bag" size={12} color="#fff" />
+            <Text style={styles.itemBadgeText}>{items.length}</Text>
           </View>
         </View>
-      </View>
-    </View>
-  );
+
+        {items.map((item) => (
+          <View key={item.id} style={styles.card}>
+            <Image source={{ uri: item.image }} style={styles.image} />
+            <View style={styles.info}>
+              <View style={styles.headerRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.productName} numberOfLines={1}>
+                    {item.product_name}
+                  </Text>
+                  <Text style={styles.restaurant}>{restaurantName}</Text>
+                </View>
+              </View>
+
+              {/* Added: Beautifully Styled Description */}
+              <Text style={styles.description} numberOfLines={2}>
+                {item.description ||
+                  "Freshly prepared with the finest ingredients, delivered hot to your door."}
+              </Text>
+
+              <View style={styles.priceRow}>
+                <Text style={styles.price}>Birr {item.price.toFixed(2)}</Text>
+
+                <View style={styles.counterContainer}>
+                  <TouchableOpacity
+                    style={styles.counterBtn}
+                    onPress={() => removeFromCart(item.id)}
+                  >
+                    <Feather name="minus" size={14} color="#1A1A1A" />
+                  </TouchableOpacity>
+
+                  <Text style={styles.quantityText}>{item.amount}</Text>
+
+                  <TouchableOpacity
+                    style={styles.counterBtn}
+                    onPress={() => addToCart(item)}
+                  >
+                    <Feather name="plus" size={14} color="#1A1A1A" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        ))}
+      </>
+    );
+  };
 
   if (cart.length === 0) {
     return (
@@ -126,8 +167,8 @@ const Carts = () => {
           </View>
 
           <FlatList
-            data={cart}
-            keyExtractor={(item) => item.id.toString()}
+            data={groupedArray}
+            keyExtractor={(item) => item[0]}
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
@@ -342,7 +383,7 @@ const styles = StyleSheet.create({
 
   // Footer Styles
   footer: {
-    position: "absolute",
+    position: "aboslute",
     bottom: 0,
     width: width,
     backgroundColor: "#FFF",
@@ -468,4 +509,84 @@ const styles = StyleSheet.create({
   miniBadgeText: { color: "#FFF", fontSize: 10, fontWeight: "900" },
   closeModal: { marginTop: 10, padding: 15, alignItems: "center" },
   closeModalText: { color: "#BBB", fontWeight: "700", fontSize: 15 },
+  restaurantHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+    marginTop: 10,
+    paddingHorizontal: 5,
+  },
+
+  restaurantLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  iconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#FFF0F2",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+
+  restaurantName: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#1A1A1A",
+  },
+
+  restaurantSub: {
+    fontSize: 11,
+    color: "#888",
+    marginTop: 2,
+    fontWeight: "500",
+  },
+
+  itemBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FF3B5C",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    gap: 5,
+  },
+
+  itemBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  inputBox: {
+  marginTop: 15,
+  backgroundColor: "#FFF",
+  borderRadius: 16,
+  padding: 14,
+  borderWidth: 1,
+  borderColor: "#F0F0F0",
+
+  shadowColor: "#000",
+  shadowOpacity: 0.05,
+  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 2,
+},
+
+inputLabel: {
+  fontSize: 13,
+  fontWeight: "800",
+  color: "#121212",
+  marginBottom: 8,
+},
+
+textInput: {
+  minHeight: 80,
+  fontSize: 13,
+  color: "#121212",
+  textAlignVertical: "top", // important for Android
+},
 });

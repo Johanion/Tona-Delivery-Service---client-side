@@ -15,18 +15,28 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useAtom } from "jotai";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-import products from "../../constants/foods";
-import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom";
 
-const { width } = Dimensions.get("window");
+import { RestaurantId } from "../../atom";
+import { RestaurantName } from "../../atom";
+import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom";
+import productsData from "../../constants/foods";
+
 
 const FoodOrder = () => {
   const [cart] = useAtom(cartAtom);
   const [, addToCart] = useAtom(addToCartAtom);
   const [, removeFromCart] = useAtom(removeFromCartAtom);
-  const router = useRouter();
+    const [restaurantId] = useAtom(RestaurantId)
+    const [restaurantName] = useAtom(RestaurantName)
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.amount * item.price, 0);
+    const { width } = Dimensions.get("window");
+    const router = useRouter();
+
+    const totalPrice = cart.reduce((sum, item) => sum + item.amount * item.price, 0);
+
+    // get producsts for specific (RestaurantId)
+    const products = productsData.filter((item)=> item.restaurant_id==restaurantId)
+    console.log(restaurantId)
 
   const getQuantity = (productId) => {
     const item = cart.find((p) => p.id === productId);
@@ -52,7 +62,7 @@ const FoodOrder = () => {
           <View style={styles.infoWrapper}>
             <View>
               <View style={styles.headerRow}>
-                <Text style={styles.categoryLabel}>{item.name}</Text>
+                <Text style={styles.categoryLabel}>{restaurantName}</Text>
                 <View style={styles.ratingBadge}>
                   <Feather name="star" size={10} color="#FFB800" />
                   <Text style={styles.ratingText}>4.8</Text>
