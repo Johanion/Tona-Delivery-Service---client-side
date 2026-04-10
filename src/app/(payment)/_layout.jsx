@@ -7,7 +7,8 @@ const PaymentLayout = () => {
       <SafeAreaView style={{flex:1}}>
         <Stack>
           <Stack.Screen name="chapa" options={{ headerShown: false }} />
-          <Stack.Screen name="(bank)" options={{ headerShown: false }} />
+          <Stack.Screen name="mainPayment" options={{ headerShown: false }} />
+          <Stack.Screen name="paymentReceitsInsertion" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
   );

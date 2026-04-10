@@ -9,17 +9,20 @@ import {
   StatusBar,
   Platform,
   Dimensions,
-  TextInput
+  TextInput,
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useRouter } from "expo-router";
+import { useMemo } from "react";
 import Modal from "react-native-modal";
 import { MaterialIcons, Ionicons, Feather } from "@expo/vector-icons";
+
 import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom.jsx";
+import { selectedPaymentEnd } from "../../atom.jsx";
+import { checkoutProductsAtom } from "../../atom";
 import restaurant from "../../constants/restaurants";
-import { useMemo } from "react";
 
 const { width } = Dimensions.get("window");
 
@@ -28,6 +31,8 @@ const Carts = () => {
   const [, addToCart] = useAtom(addToCartAtom);
   const [, removeFromCart] = useAtom(removeFromCartAtom);
   const [visible, setVisible] = useState(false);
+  const setGrandPaymentAmount = useSetAtom(selectedPaymentEnd);
+  const setCheckoutProducts = useSetAtom(checkoutProductsAtom);
   const router = useRouter();
 
   // get total price for all orders
@@ -35,6 +40,21 @@ const Carts = () => {
     (sum, item) => sum + item.amount * item.price,
     0,
   );
+
+  // get all products
+  const handleCheckout = () => {
+    const products = cart.map((item) => ({
+      product_id: item.id,
+      quantity: item.amount,
+    }));
+
+    setCheckoutProducts(products);
+
+    router.push("/mainPayment");
+    console.log(products);
+
+  };
+
 
   // group cart based on the restaurant /memoized/
   const groupedArray = useMemo(() => {
@@ -187,7 +207,10 @@ const Carts = () => {
 
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => setVisible(true)}
+              onPress={() => {
+                setVisible(true);
+                setGrandPaymentAmount(totalPrice);
+              }}
             >
               <LinearGradient
                 colors={["#FF4B68", "#FF3B5C"]}
@@ -238,8 +261,8 @@ const Carts = () => {
               <TouchableOpacity
                 style={styles.paymentOption}
                 onPress={() => {
+                  handleCheckout()
                   setVisible(false);
-                  router.push("../(payment)/(bank)/mainPayment");
                 }}
               >
                 <View
@@ -562,31 +585,31 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   inputBox: {
-  marginTop: 15,
-  backgroundColor: "#FFF",
-  borderRadius: 16,
-  padding: 14,
-  borderWidth: 1,
-  borderColor: "#F0F0F0",
+    marginTop: 15,
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
 
-  shadowColor: "#000",
-  shadowOpacity: 0.05,
-  shadowRadius: 10,
-  shadowOffset: { width: 0, height: 4 },
-  elevation: 2,
-},
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
 
-inputLabel: {
-  fontSize: 13,
-  fontWeight: "800",
-  color: "#121212",
-  marginBottom: 8,
-},
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#121212",
+    marginBottom: 8,
+  },
 
-textInput: {
-  minHeight: 80,
-  fontSize: 13,
-  color: "#121212",
-  textAlignVertical: "top", // important for Android
-},
+  textInput: {
+    minHeight: 80,
+    fontSize: 13,
+    color: "#121212",
+    textAlignVertical: "top", // important for Android
+  },
 });

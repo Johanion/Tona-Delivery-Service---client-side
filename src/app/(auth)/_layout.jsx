@@ -1,10 +1,12 @@
+import { StyleSheet, ActivityIndicator } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useAuth } from "../../providers/AuthProvider";
 import { useEffect, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
 
 const AuthLayout = () => {
   const { session, loading: authLoading } = useAuth();
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     if (session) {
@@ -31,3 +33,11 @@ const AuthLayout = () => {
 };
 
 export default AuthLayout;
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});

@@ -9,6 +9,7 @@ const OrdersLayout = () => {
         <Stack>
           <Stack.Screen name="food_order" options={{ headerShown: false }} />
           <Stack.Screen name="carts" options={{ headerShown: false }} />
+          <Stack.Screen name="orderDetails" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
     </SafeAreaProvider>

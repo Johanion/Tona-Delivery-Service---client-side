@@ -10,20 +10,22 @@ import {
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAtom } from "jotai";
 
-import gateway from "../../../constants/gateway.js"
-import RenderingPaymentGateway from "../../../components/RenderingPaymentGateway.jsx";
-import { LinearGradient } from "expo-linear-gradient";
-
-
-const PAYMENT_AMOUNT = "700"
-// Support Info
-const PHONE_1 = "+251 911 123 456";
-const PHONE_2 = "+251 911 654 321";
-const TELEGRAM_LINK = "https://t.me/your_support_bot";
+import gateway from "../../constants/gateway.js";
+import RenderingPaymentGateway from "../../components/RenderingPaymentGateway.jsx";
+import { totalAmount } from "../../atom.jsx";
 
 const menu = () => {
+  const [grandPaymentAmount, setGrandPaymentAmount] = useAtom(totalAmount)
+  const PAYMENT_AMOUNT = grandPaymentAmount;
+
+  // Support Info
+  const PHONE_1 = "+251 911 123 456";
+  const PHONE_2 = "+251 911 654 321";
+  const TELEGRAM_LINK = "https://t.me/your_support_bot";
+
   const paymentGatewayData = [
     {
       name: "Telebirr",

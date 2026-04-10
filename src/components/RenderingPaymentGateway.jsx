@@ -15,7 +15,7 @@ const RenderingPaymentGateway = ({ data }) => {
 
   const goToPaymentImagePicker = (pData) => {
     setPaymentData(pData);
-    router.push("../PaymentReceiptInsertion");
+    router.push("../bank/paymentReceitsInsertion");
   };
 
   return (
