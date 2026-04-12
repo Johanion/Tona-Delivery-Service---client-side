@@ -12,119 +12,165 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-
-const { width } = Dimensions.get("window");
-
-// Mock Data from your request
-const orders = [
-  {
-    id: "o1",
-    date: "12 Oct, 2023",
-    products: [
-      {
-        id: "p2",
-        product_name: "Chicken Bucket",
-        restaurant_id: "r2",
-        description: "Crispy fried chicken with signature spices.",
-        image: "https://images.unsplash.com/photo-1606755962773-d324e0a13086",
-        price: 100,
-        delivery_time: "40",
-        restaurant_id: "v1",
-        quantity: 4,
-      },
-    ],
-    description: "2 Items from Burger House",
-    is_verfied_up: true,
-    is_picked_up: true,
-    is_dropped_off: false,
-    order_delivered: false,
-  },
-  {
-    id: "o2",
-    date: "10 Oct, 2023",
-    products: [
-      {
-        id: "p2",
-        product_name: "Chicken Bucket",
-        restaurant_id: "r2",
-        description: "Crispy fried chicken with signature spices.",
-        image: "https://images.unsplash.com/photo-1606755962773-d324e0a13086",
-        price: 100,
-        delivery_time: "40",
-        restaurant_id: "v1",
-        quantity: 4,
-      },
-      {
-        id: "p2",
-        product_name: "Chicken Bucket",
-        restaurant_id: "r2",
-        description: "Crispy fried chicken with signature spices.",
-        image: "https://images.unsplash.com/photo-1606755962773-d324e0a13086",
-        price: 100,
-        delivery_time: "40",
-        restaurant_id: "v1",
-        quantity: 4,
-      },
-    ],
-    description: "1 Item from Pizza Palace",
-    is_verfied_up: true,
-    is_picked_up: false,
-    is_dropped_off: false,
-    order_delivered: false,
-  },
-];
+import { useAuth } from "../../providers/AuthProvider";
+import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
+import { selectedOrderItems } from "../../atom";
+import { supabase } from "../../lib/supabase";
 
 const OrderList = () => {
   const router = useRouter();
+  const setOrderItems = useSetAtom(selectedOrderItems);
 
-  const calculateProgress = (order) => {
-    if (order.is_dropped_off) return "100%";
-    if (order.is_picked_up) return "66.66%";
-    if (order.is_verfied_up) return "33.33%";
-    return "5%"; // Initial state
+  const { width } = Dimensions.get("window");
+  const { session, loading: authLoading } = useAuth();
+  console.log("Sesssssssssssssssssssionnsssssssssssssssss", session.user.id);
+
+  // get all orders detail and history
+  const fetchUserOrders = async (userId) => {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(
+        `
+      id,
+      created_at,
+      total_price,
+      is_verified,
+      is_picked_up,
+      is_dropped_off,
+      order_delivered,
+      "orders_products" (
+        quantity,
+        product_id,
+        products (
+          product_name,
+          price,
+          image,
+          vendors (
+          name, 
+          image
+          )
+        )
+      )
+    `,
+      )
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) console.log(error.message);
+    return data;
   };
 
-  const getStatusText = (order) => {
-    if (order.is_dropped_off) return "Delivered";
-    if (order.is_picked_up) return "On the Way";
-    if (order.is_verfied_up) return "Verified";
-    return "Pending";
+  // TanStack Query Hook
+  const {
+    data: orders_history_data,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["ordersHistory"],
+    queryFn: () => fetchUserOrders(session.user.id),
+    refetchInterval: 5000, // Fetch every 10 seconds
+    // Optional: only fetch if the user is actually looking at the screen
+    refetchOnWindowFocus: true,
+  });
+
+  if (isLoading)
+    return <Text style={{ padding: 20 }}>Loading restaurants...</Text>;
+  if (isError)
+    return <Text style={{ color: "red" }}>Error: {error.message}</Text>;
+
+  // handling orders onPress
+  const handleOrderPress = (orderItem) => {
+    setOrderItems(orderItem);
+    router.push("/orderDetails");
+    console.log("orderItemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm.", orderItem)
   };
 
   const renderOrderItem = ({ item }) => {
-    const progress = calculateProgress(item);
+    // get status of the order
+    const getStatusText = (order) => {
+      if (order.is_dropped_off) return "Delivered";
+      if (order.is_picked_up) return "On the Way";
+      if (order.is_verfied_up) return "Verified";
+      return "Pending";
+    };
+
+    // 1. Calculate progress based on your DB flags
+    const calculateProgress = () => {
+      if (item.is_dropped_off) return "100%";
+      if (item.is_picked_up) return "66.66%";
+      if (item.is_verified) return "33.33%"; // Corrected from your DB log (is_verified)
+      return "10%";
+    };
+
+    const progress = calculateProgress();
+
+    // 2. Format the product summary (e.g., "Chicken Bucket + 2 more")
+    const firstProductName =
+      item.orders_products?.[0]?.products?.product_name || "Food Order";
+    const extraItemsCount = item.orders_products?.length - 1;
+    const orderSummary =
+      extraItemsCount > 0
+        ? `${firstProductName} + ${extraItemsCount} more`
+        : firstProductName;
 
     return (
       <TouchableOpacity
         activeOpacity={0.9}
         style={styles.orderCard}
-        onPress={() => router.push("/orderDetails")}
+        // Pass the whole item as a stringified param or just the ID
+        onPress={() => handleOrderPress(item)}
       >
-        <View style={styles.cardTop}>
-          <View style={styles.idBadge}>
-            <Text style={styles.idText}>#{item.id.toUpperCase()}</Text>
-          </View>
-          <Text style={styles.dateText}>{item.date || "Just Now"}</Text>
+        <View style={styles.dateBadge}>
+          <Feather
+            name="calendar"
+            size={12}
+            color="#A39495"
+            style={{ marginRight: 5 }}
+          />
+          <Text style={styles.dateText}>
+            {new Date(item.created_at).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </Text>
         </View>
 
         <View style={styles.cardContent}>
           <View style={styles.iconContainer}>
+            {/* Dynamic icon based on status */}
             <MaterialCommunityIcons
-              name="package-variant-closed"
+              name={
+                item.is_dropped_off
+                  ? "package-variant"
+                  : "truck-delivery-outline"
+              }
               size={24}
               color="#FF3B5C"
             />
           </View>
           <View style={styles.textDetails}>
-            <Text style={styles.orderTitle}>
-              {item.description || "Food Order"}
+            <Text style={styles.orderTitle} numberOfLines={1}>
+              {orderSummary}
             </Text>
-            <Text style={styles.statusText}>{getStatusText(item)}</Text>
+            <View style={styles.priceTagRow}>
+              <View style={styles.birrBadge}>
+                {" "}
+                <Text style={styles.totalAmountText}>
+                  Birr {item.total_price}
+                </Text>
+              </View>
+
+              <View style={styles.dotSeparator} />
+              <Text style={styles.statusText}>{getStatusText(item)}</Text>
+            </View>
           </View>
           <Feather name="chevron-right" size={20} color="#CCC" />
         </View>
 
-        {/* --- CREATIVE PROGRESS SECTION --- */}
+        {/* --- REFINED PROGRESS SECTION --- */}
         <View style={styles.progressSection}>
           <View style={styles.progressBarBg}>
             <LinearGradient
@@ -136,27 +182,36 @@ const OrderList = () => {
           </View>
 
           <View style={styles.stepsRow}>
-            <Text
-              style={[
-                styles.stepLabel,
-                item.is_verfied_up && styles.activeStep,
-              ]}
-            >
-              Verified
-            </Text>
-            <Text
-              style={[styles.stepLabel, item.is_picked_up && styles.activeStep]}
-            >
-              Picked Up
-            </Text>
-            <Text
-              style={[
-                styles.stepLabel,
-                item.is_dropped_off && styles.activeStep,
-              ]}
-            >
-              Dropped
-            </Text>
+            <View style={styles.stepContainer}>
+              <Text
+                style={[
+                  styles.stepLabel,
+                  item.is_verified && styles.activeStep,
+                ]}
+              >
+                Verified
+              </Text>
+            </View>
+            <View style={styles.stepContainer}>
+              <Text
+                style={[
+                  styles.stepLabel,
+                  item.is_picked_up && styles.activeStep,
+                ]}
+              >
+                Picked Up
+              </Text>
+            </View>
+            <View style={styles.stepContainer}>
+              <Text
+                style={[
+                  styles.stepLabel,
+                  item.is_dropped_off && styles.activeStep,
+                ]}
+              >
+                Dropped
+              </Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -185,7 +240,7 @@ const OrderList = () => {
           </View>
 
           <FlatList
-            data={orders}
+            data={orders_history_data}
             keyExtractor={(item) => item.id}
             renderItem={renderOrderItem}
             contentContainerStyle={styles.listPadding}
@@ -241,21 +296,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 15,
   },
-  idBadge: {
-    backgroundColor: "#F8F9FA",
+  dateText: { fontSize: 12, color: "#3D3334", fontWeight: "600" },
+  dateBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF5F6", // Very light grey
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#EEE",
+    marginBottom: 11,
+    alignSelf: "flex-end",
   },
-  idText: { fontSize: 11, fontWeight: "800", color: "#777" },
-  dateText: { fontSize: 12, color: "#999", fontWeight: "600" },
-
   cardContent: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   iconContainer: {
     width: 50,
@@ -305,6 +360,53 @@ const styles = StyleSheet.create({
   },
   activeStep: {
     color: "#1A1A1A",
+  },
+
+  idBadge: {
+    backgroundColor: "#F0F0F0",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  birrBadge: {
+    backgroundColor: "#E8F5E9",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  idText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#888",
+    letterSpacing: 0.5,
+  },
+  priceTagRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    marginTop: 10,
+  },
+  totalAmountText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#4CAF50",
+  },
+  dotSeparator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#DDD",
+    marginHorizontal: 8,
+  },
+  stepContainer: {
+    flex: 1,
+    alignItems: "center",
+  },
+  // Ensure the first step aligns left and last aligns right
+  stepsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 6,
   },
 });
 

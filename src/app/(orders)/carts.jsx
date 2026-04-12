@@ -16,13 +16,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useAtom, useSetAtom } from "jotai";
 import { useRouter } from "expo-router";
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Modal from "react-native-modal";
 import { MaterialIcons, Ionicons, Feather } from "@expo/vector-icons";
 
 import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom.jsx";
-import { selectedPaymentEnd } from "../../atom.jsx";
+import { totalAmount } from "../../atom.jsx";
 import { checkoutProductsAtom } from "../../atom";
-import restaurant from "../../constants/restaurants";
 
 const { width } = Dimensions.get("window");
 
@@ -31,9 +31,30 @@ const Carts = () => {
   const [, addToCart] = useAtom(addToCartAtom);
   const [, removeFromCart] = useAtom(removeFromCartAtom);
   const [visible, setVisible] = useState(false);
-  const setGrandPaymentAmount = useSetAtom(selectedPaymentEnd);
+  const setGrandPaymentAmount = useSetAtom(totalAmount);
   const setCheckoutProducts = useSetAtom(checkoutProductsAtom);
   const router = useRouter();
+
+  // calling supabase to fetch products
+  const fetchVendors = async () => {
+    const { data, error } = await supabase
+      .from("vendors")
+      .select("*")
+
+    if (error) throw new Error(error.message);
+    return data;
+  };
+
+  // TanStack Query Hook
+  const {
+    data: restaurant,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["vendors"],
+    queryFn: fetchVendors,
+  });
 
   // get total price for all orders
   const totalPrice = cart.reduce(
@@ -52,9 +73,7 @@ const Carts = () => {
 
     router.push("/mainPayment");
     console.log(products);
-
   };
-
 
   // group cart based on the restaurant /memoized/
   const groupedArray = useMemo(() => {
@@ -261,7 +280,7 @@ const Carts = () => {
               <TouchableOpacity
                 style={styles.paymentOption}
                 onPress={() => {
-                  handleCheckout()
+                  handleCheckout();
                   setVisible(false);
                 }}
               >

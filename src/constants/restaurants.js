@@ -6,7 +6,7 @@ const vendors = [
     image_path: "https://pub-1eebd2287b904e4fb8a39ee05598f124.r2.dev/macdonald.png",
     rating: 4.6,
     address: "Main Street 12",
-    type: "Restaurant"
+    type: "Restaurant"  
   },
   {
     id: "v2",

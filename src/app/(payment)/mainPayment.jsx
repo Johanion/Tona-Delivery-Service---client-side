@@ -19,6 +19,7 @@ import { totalAmount } from "../../atom.jsx";
 
 const menu = () => {
   const [grandPaymentAmount, setGrandPaymentAmount] = useAtom(totalAmount)
+  console.log(grandPaymentAmount)
   const PAYMENT_AMOUNT = grandPaymentAmount;
 
   // Support Info

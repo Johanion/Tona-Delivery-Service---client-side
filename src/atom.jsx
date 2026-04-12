@@ -8,6 +8,7 @@ export const totalAmount = atom (null)
 export const RestaurantId = atom (null)
 export const RestaurantName = atom (null)
 export const checkoutProductsAtom = atom([]);
+export const selectedOrderItems = atom([])
 
 // Add a product by ID or increment
 export const addToCartAtom = atom(

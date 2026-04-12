@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,223 +6,430 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  Dimensions,
+  ActivityIndicator,
   Platform,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Feather, MaterialIcons, Ionicons } from "@expo/vector-icons";
-import { useRouter, useLocalSearchParams } from "expo-router";
-// import QRCode from "react-native-qrcode-svg"; // Ensure this is installed
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useAtomValue } from "jotai";
+import { selectedOrderItems } from "../../atom";
 
 const { width } = Dimensions.get("window");
 
 const OrderDetail = () => {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const order = useAtomValue(selectedOrderItems);
 
-  // In a real app, you'd fetch by ID. Using o2 as an example for multiple products.
-  const order = {
-    id: "o2",
-    date: "10 Oct, 2026",
-    status: "In Transit",
-    products: [
-      {
-        id: "p2",
-        product_name: "Chicken Bucket",
-        description: "Crispy fried chicken with signature spices.",
-        image: "https://images.unsplash.com/photo-1606755962773-d324e0a13086",
-        price: 100,
-        quantity: 4,
-      },
-      {
-        id: "p3",
-        product_name: "Cold Pepsi",
-        description: "Chilled 500ml bottle.",
-        image: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e",
-        price: 45,
-        quantity: 1,
-      },
-    ],
-    is_verfied_up: true,
-    is_picked_up: true,
-    is_dropped_off: false,
-  };
+  const { subtotal, deliveryFee } = useMemo(() => {
+    if (!order?.orders_products) return { subtotal: 0, deliveryFee: 0 };
+    const calcSub = order.orders_products.reduce((acc, item) => {
+      return acc + (item.products?.price || 0) * (item.quantity || 0);
+    }, 0);
+    
+    const fee = (order.total_price || 0) - calcSub;
+    return { subtotal: calcSub, deliveryFee: fee > 0 ? fee : 0 };
+  }, [order]);
 
-  const subtotal = order.products.reduce((acc, p) => acc + p.price * p.quantity, 0);
-  const deliveryFee = 50;
-  const total = subtotal + deliveryFee;
+  if (!order) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FF3B5C" />
+        <Text style={styles.loadingText}>Loading receipt...</Text>
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient colors={["#FFDBB4", "#FFF5EB", "#FFFFFF"]} style={styles.gradient}>
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Feather name="chevron-left" size={26} color="#1A1A1A" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Order Details</Text>
-          <TouchableOpacity style={styles.helpButton}>
-            <Feather name="help-circle" size={20} color="#666" />
-          </TouchableOpacity>
-        </View>
+    <View style={styles.container}>
+      {/* --- FLOATING BLURRED HEADER --- */}
+      <View style={styles.glassHeader}>
+        <SafeAreaView edges={["top"]}>
+          <View style={styles.headerInner}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.iconCircle}
+            >
+              <Feather name="arrow-left" size={20} color="#1A1A1A" />
+            </TouchableOpacity>
+            <View style={styles.headerTitleGroup}>
+              <Text style={styles.navTitle}>Order Receipt</Text>
+            </View>
+            <TouchableOpacity style={styles.iconCircle}>
+              <Feather name="share-2" size={18} color="#1A1A1A" />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          
-          {/* Order Info Card */}
-          <View style={styles.mainCard}>
-            <View style={styles.statusRow}>
-              <View style={styles.statusBadge}>
-                <View style={styles.statusDot} />
-                <Text style={styles.statusText}>{order.is_picked_up ? "In Transit" : "Verified"}</Text>
-              </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <LinearGradient colors={["#FFF", "#F9FAFB"]} style={styles.mainCard}>
+          {/* Status Banner */}
+          <View style={styles.heroSection}>
+            <View
+              style={[
+                styles.statusPill,
+                {
+                  backgroundColor: order.is_dropped_off ? "#ECFDF5" : "#FFF1F2",
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.statusDot,
+                  {
+                    backgroundColor: order.is_dropped_off
+                      ? "#10B981"
+                      : "#FF3B5C",
+                  },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.statusPillText,
+                  { color: order.is_dropped_off ? "#065F46" : "#9F1239" },
+                ]}
+              >
+                {order.is_dropped_off ? "DELIVERED" : "ORDER IN TRANSIT"}
+              </Text>
             </View>
 
-            <Text style={styles.sectionTitle}>Summary</Text>
-            {order.products.map((item, index) => (
-              <View key={index} style={styles.productItem}>
-                <Image source={{ uri: item.image }} style={styles.productImg} />
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName}>{item.product_name}</Text>
-                  <Text style={styles.productDesc} numberOfLines={1}>{item.description}</Text>
-                  <Text style={styles.productQty}>Quantity: {item.quantity}</Text>
+            {/* styles for date */}
+            <View style={styles.dateBadge}>
+              <Feather
+                name="calendar"
+                size={12}
+                color="#A39495"
+                style={{ marginRight: 5 }}
+              />
+              <Text style={styles.dateText}>
+                {new Date(order.created_at).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Product Items */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>YOUR ITEMS</Text>
+            {order.orders_products?.map((item, index) => (
+              <View key={index} style={styles.itemRow}>
+                <Image
+                  source={{ uri: item.products?.image }}
+                  style={styles.productImage}
+                />
+                <View style={styles.itemInfo}>
+                  <Text style={styles.itemName}>
+                    {item.products?.product_name}
+                  </Text>
+                  <View style={styles.restaruantBadge}>
+                    <Text style={styles.itemSub}>
+                      {item.products?.vendors?.name || "Tona Store"}
+                    </Text>
+                  </View>
+                  <Text style={styles.itemQty}>Quantity: {item.quantity}</Text>
                 </View>
-                <Text style={styles.productPrice}>Birr {item.price * item.quantity}</Text>
+                <Text style={styles.itemPrice}>
+                  Birr {(item.products?.price || 0) * (item.quantity || 0)}
+                </Text>
               </View>
             ))}
-
-            <View style={styles.divider} />
-
-            {/* Price Breakdown */}
-            <View style={styles.billingRow}>
-              <Text style={styles.billingLabel}>Subtotal</Text>
-              <Text style={styles.billingValue}>Birr {subtotal.toFixed(2)}</Text>
-            </View>
-            <View style={styles.billingRow}>
-              <Text style={styles.billingLabel}>Delivery Fee</Text>
-              <Text style={styles.billingValue}>Birr {deliveryFee.toFixed(2)}</Text>
-            </View>
-            <View style={[styles.billingRow, { marginTop: 10 }]}>
-              <Text style={styles.totalLabel}>Total Amount</Text>
-              <Text style={styles.totalValue}>Birr {total.toFixed(2)}</Text>
-            </View>
           </View>
 
-          {/* QR Code Section */}
-          <View style={styles.qrContainer}>
-            <Text style={styles.qrTitle}>Delivery QR Code</Text>
-            <Text style={styles.qrSub}>Show this to the courier upon arrival to confirm delivery.</Text>
-            {/* <View style={styles.qrWrapper}>
-              <QRCode
-                value={`ORDER_${order.id}`}
-                size={160}
-                color="#1A1A1A"
-                backgroundColor="transparent"
-              />
-            </View> */}
-            <View style={styles.securityNote}>
-              <Feather name="shield" size={14} color="#4CAF50" />
-              <Text style={styles.securityText}>Secure Verification Active</Text>
+          {/* Dotted Line for "Receipt" look */}
+          <View style={styles.receiptEdge} />
+
+          {/* Billing Detail */}
+          <View style={styles.billingSection}>
+            <View style={styles.billLine}>
+              <Text style={styles.billLabel}>Subtotal</Text>
+              <Text style={styles.billValue}>
+                Birr {subtotal.toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.billLine}>
+              <Text style={styles.billLabel}>Delivery Fee</Text>
+              <Text style={styles.billValue}>
+                Birr {deliveryFee.toLocaleString()}
+              </Text>
+            </View>
+            <View style={[styles.billLine, styles.totalLine]}>
+              <Text style={styles.totalLabel}>Total Amount:</Text>
+              <View style={styles.restaruantBadge}>
+                <Text style={styles.totalValue}>
+                  Birr {order.total_price?.toLocaleString()}
+                </Text>
+              </View>
             </View>
           </View>
+        </LinearGradient>
 
-        </ScrollView>
-      </LinearGradient>
-    </SafeAreaView>
+        {/* --- QR SECTION --- */}
+        <View style={styles.qrContainer}>
+          <Text style={styles.qrTitle}>Delivery Verification</Text>
+          <Text style={styles.qrDescription}>
+            Please present this code to the rider upon arrival
+          </Text>
+          <View style={styles.qrWrapper}>
+            <Ionicons name="qr-code-outline" size={120} color="#1A1A1A" />
+            <View style={styles.qrCornerTopLeft} />
+            <View style={styles.qrCornerTopRight} />
+            <View style={styles.qrCornerBottomLeft} />
+            <View style={styles.qrCornerBottomRight} />
+          </View>
+          <View style={styles.securityBadge}>
+            <Feather name="shield" size={12} color="#6366F1" />
+            <Text style={styles.securityText}>ENCRYPTED TRANSACTION</Text>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF" },
-  gradient: { flex: 1 },
-  header: {
+  container: { flex: 1, backgroundColor: "#F3F4F6" },
+  glassHeader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 10 },
+    }),
+  },
+  headerInner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingBottom: 12,
+    paddingTop: 8,
   },
-  backButton: {
-    width: 45,
-    height: 45,
-    borderRadius: 15,
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#FFF",
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
-    elevation: 2,
-    shadowOpacity: 0.1,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
   },
-  headerTitle: { fontSize: 18, fontWeight: "800", color: "#1A1A1A" },
-  helpButton: { width: 45, alignItems: "flex-end" },
-  
-  scrollContent: { padding: 20, paddingBottom: 60 },
+  headerTitleGroup: { alignItems: "center" },
+  navTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#111827",
+    letterSpacing: -0.5,
+  },
+  navSubtitle: {
+    fontSize: 11,
+    color: "#9CA3AF",
+    fontWeight: "600",
+    marginTop: 2,
+  },
 
+  scrollContent: { padding: 16, paddingTop: 110, paddingBottom: 40 },
   mainCard: {
-    backgroundColor: "#FFF",
-    borderRadius: 30,
-    padding: 20,
-    elevation: 10,
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: "#FFF",
     shadowColor: "#000",
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 20,
-    marginBottom: 25,
+    elevation: 4,
+    overflow: "hidden",
   },
-  statusRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  heroSection: {
     alignItems: "center",
+    justifyContent: "space-between",
+    padding: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 100,
+    marginBottom: 12,
+    justifyContent: "flex-start",
+    alignSelf: "center",
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 8,
+    alignItems: "center",
+  },
+  statusPillText: { fontSize: 11, fontWeight: "900" },
+  heroDate: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1F2937",
+    alignItems: "center",
+  },
+  dateBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF5F6", // Very light grey
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginBottom: 11,
+    alignSelf: "flex-end",
+  },
+  dateText: { fontSize: 12, color: "#3D3334", fontWeight: "600" },
+  divider: { height: 1, backgroundColor: "#F3F4F6", marginHorizontal: 24 },
+  section: { padding: 24 },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#9CA3AF",
+    letterSpacing: 1.5,
     marginBottom: 20,
   },
-  statusBadge: {
+
+  itemRow: { flexDirection: "row", marginBottom: 18, alignItems: "center" },
+  productImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: "#F3F4F6",
+  },
+  itemInfo: { flex: 1, marginLeft: 16 },
+  itemName: { fontSize: 15, fontWeight: "700", color: "#111827" },
+  itemSub: { fontSize: 13, color: "#E0115F", marginTop: 2 },
+  restaruantBadge: {
+    backgroundColor: "#FFF0F2",
+    padding: 3,
+    borderRadius: 4,
+    alignSelf: "flex-start",
+  },
+  itemQty: { fontSize: 12, fontWeight: "600", color: "#9CA3AF", marginTop: 4 },
+  itemPrice: { fontSize: 15, fontWeight: "800", color: "#111827" },
+
+  receiptEdge: {
+    height: 1,
+    borderStyle: "dashed",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginHorizontal: 24,
+    marginVertical: 10,
+  },
+
+  billingSection: { padding: 24, backgroundColor: "rgba(249, 250, 251, 0.5)" },
+  billLine: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  billLabel: { fontSize: 14, color: "#6B7280", fontWeight: "500" },
+  billValue: { fontSize: 14, color: "#111827", fontWeight: "600" },
+  totalLine: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  totalLabel: { fontSize: 16, fontWeight: "800", color: "#111827" },
+  totalValue: { fontSize: 22, fontFamily: "Poppins-Bold", color: "#E0115F" },
+
+  qrContainer: { marginTop: 30, alignItems: "center", paddingHorizontal: 40 },
+  qrTitle: { fontSize: 18, fontWeight: "800", color: "#111827" },
+  qrDescription: {
+    fontSize: 13,
+    color: "#6B7280",
+    textAlign: "center",
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  qrWrapper: {
+    marginTop: 25,
+    padding: 25,
+    backgroundColor: "#FFF",
+    borderRadius: 30,
+    position: "relative",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+  },
+  qrCornerTopLeft: {
+    position: "absolute",
+    top: 15,
+    left: 15,
+    width: 20,
+    height: 20,
+    borderTopWidth: 3,
+    borderLeftWidth: 3,
+    borderColor: "#FF3B5C",
+  },
+  qrCornerTopRight: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 20,
+    height: 20,
+    borderTopWidth: 3,
+    borderRightWidth: 3,
+    borderColor: "#FF3B5C",
+  },
+  qrCornerBottomLeft: {
+    position: "absolute",
+    bottom: 15,
+    left: 15,
+    width: 20,
+    height: 20,
+    borderBottomWidth: 3,
+    borderLeftWidth: 3,
+    borderColor: "#FF3B5C",
+  },
+  qrCornerBottomRight: {
+    position: "absolute",
+    bottom: 15,
+    right: 15,
+    width: 20,
+    height: 20,
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
+    borderColor: "#FF3B5C",
+  },
+
+  securityBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E8F5E9",
+    marginTop: 25,
+    backgroundColor: "#EEF2FF",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
-  statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#4CAF50", marginRight: 8 },
-  statusText: { fontSize: 12, fontWeight: "700", color: "#4CAF50" },
-  orderIdText: { fontSize: 13, fontWeight: "700", color: "#BBB" },
-
-  sectionTitle: { fontSize: 16, fontWeight: "900", color: "#1A1A1A", marginBottom: 15 },
-  productItem: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
-  productImg: { width: 60, height: 60, borderRadius: 12, backgroundColor: "#F8F9FA" },
-  productInfo: { flex: 1, marginLeft: 15 },
-  productName: { fontSize: 15, fontWeight: "700", color: "#1A1A1A" },
-  productDesc: { fontSize: 12, color: "#999", marginTop: 2 },
-  productQty: { fontSize: 12, fontWeight: "600", color: "#FF3B5C", marginTop: 4 },
-  productPrice: { fontSize: 14, fontWeight: "800", color: "#1A1A1A", marginLeft: 10 },
-
-  divider: { height: 1, backgroundColor: "#F0F0F0", marginVertical: 15, borderStyle: "dashed", borderWidth: 0.5 },
-  billingRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
-  billingLabel: { color: "#999", fontSize: 14, fontWeight: "600" },
-  billingValue: { color: "#1A1A1A", fontSize: 14, fontWeight: "700" },
-  totalLabel: { fontSize: 16, fontWeight: "900", color: "#1A1A1A" },
-  totalValue: { fontSize: 18, fontWeight: "900", color: "#FF3B5C" },
-
-  // QR Section
-  qrContainer: {
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 30,
-    padding: 30,
-    borderWidth: 2,
-    borderColor: "#F0F0F0",
-    borderStyle: "dashed",
+  securityText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#6366F1",
+    marginLeft: 6,
   },
-  qrTitle: { fontSize: 18, fontWeight: "900", color: "#1A1A1A", marginBottom: 8 },
-  qrSub: { fontSize: 12, color: "#999", textAlign: "center", marginBottom: 25, lineHeight: 18 },
-  qrWrapper: {
-    padding: 15,
-    backgroundColor: "#FFF",
-    borderRadius: 20,
-    elevation: 5,
-    shadowOpacity: 0.1,
-  },
-  securityNote: { flexDirection: "row", alignItems: "center", marginTop: 20, gap: 6 },
-  securityText: { fontSize: 11, color: "#4CAF50", fontWeight: "700" },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { marginTop: 12, color: "#9CA3AF", fontWeight: "600" },
 });
 
 export default OrderDetail;

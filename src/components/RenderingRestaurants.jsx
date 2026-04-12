@@ -10,6 +10,8 @@ import {
 import React from "react";
 import { useRouter } from "expo-router";
 import { useAtom, useSetAtom } from "jotai";
+import { supabase } from "../lib/supabase";
+import { useQuery } from "@tanstack/react-query";
 
 import data from "../constants/restaurants.js";
 import { RestaurantId } from "../atom.jsx";
@@ -18,11 +20,28 @@ import { RestaurantName } from "../atom.jsx";
 const RenderingRestaurants = () => {
   const router = useRouter();
   const setRestaurantId = useSetAtom(RestaurantId);
-  const setRestaurantName = useSetAtom(RestaurantName)
+  const setRestaurantName = useSetAtom(RestaurantName);
+  
+  // calling supabase to fetch vendors
+  const fetchVendors = async () => {
+    const { data, error } = await supabase.from("vendors").select("*");
+
+    if (error) throw new Error(error.message);
+    return data;
+  };
+
+  // TanStack Query Hook
+  const { data: vendors, isLoading, isError, error } = useQuery({
+    queryKey: ["vendors"],
+    queryFn: fetchVendors,
+  });
+
+  if (isLoading) return <Text style={{ padding: 20 }}>Loading restaurants...</Text>;
+  if (isError) return <Text style={{ color: 'red' }}>Error: {error.message}</Text>;
 
   return (
     <FlatList
-      data={data}
+      data={vendors}
       keyExtractor={(item, index) => index.toString()}
       contentContainerStyle={{ padding: 16 }}
       showsVerticalScrollIndicator={false}
@@ -35,12 +54,12 @@ const RenderingRestaurants = () => {
             onPress={() => {
               router.push("../(orders)/food_order");
               setRestaurantId(item.id);
-              setRestaurantName(item.name)
+              setRestaurantName(item.name);
             }}
           >
             <View style={styles.imageContainer}>
               <Image
-                source={{ uri: item.image_path }}
+                source={{ uri: item.image }}
                 style={styles.image}
                 resizeMode="contain"
               />
