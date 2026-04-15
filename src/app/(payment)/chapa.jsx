@@ -22,7 +22,7 @@ const ChapaScreen = () => {
       console.log("Payment Window Closed:", result);
     } catch (err) {
       setLoading(false);
-      alert("Error: " + "Try Again Later or use Bank transfer option");
+      alert("Error: " + "Try Again Later or use Bank transfer option" + err.message);
     } finally {
       setLoading(false);
     }

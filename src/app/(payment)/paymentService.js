@@ -2,20 +2,22 @@
 import * as WebBrowser from "expo-web-browser";
 import { supabaseServerLess } from "../../lib/supabaseServerLess";
 
-const startChapaPayment = async (amount, session, cart) => {
+const startChapaPayment = async (session, cart) => {
   const userId = session.user.id;
   if (!userId) {
-    throw new Error("You must be logged in to make a payment.");
+    throw new Error("Try Again Later");
   }
 
+  if (!cart || !Array.isArray(cart) || cart.length === 0) {
+    throw new Error("Cart is empty or invalid");
+  }
   // 1. Call Edge Function
   const { data, error } = await supabaseServerLess.functions.invoke(
     "smooth-worker",
     {
       body: {
-        amount: amount,
         user_id: userId,
-        items: cart
+        cart: cart,
       },
     },
   );
@@ -24,8 +26,11 @@ const startChapaPayment = async (amount, session, cart) => {
     throw new Error(error || "Payment initialization failed");
   }
 
+  // 2. get checkout url
+  const checkout_URL = data.data.checkout_url;
+
   // 3. Open Browser
-  return await WebBrowser.openBrowserAsync(data.data.checkout_url);
+  return await WebBrowser.openBrowserAsync(checkout_URL);
 };
 
 export default startChapaPayment;
