@@ -18,9 +18,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 
 import { supabase } from "../../lib/supabase";
-import { VendorId} from "../../atom";
+import { VendorId } from "../../atom";
 import { VendorName } from "../../atom";
 import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom";
+
+import VendorCardSkelton from "../../skeleton/VendorCardSkelton.jsx";
+import ErrorState from "../../components/ErrorState.jsx";
 
 const FoodOrder = () => {
   const [cart] = useAtom(cartAtom);
@@ -54,18 +57,25 @@ const FoodOrder = () => {
     isLoading,
     isError,
     error,
+    refetch
   } = useQuery({
     queryKey: ["products"],
     queryFn: () => fetchProductsByVendors(vendorId),
     enabled: !!vendorId, // Only run if we have an ID
   });
 
-  console.log(products)
+  if (error) {
+    return (
+      <ErrorState
+        title="Fetch Failed"
+        onRetry={refetch} // Passes the refetch function
+      />
+    );
+  }
 
-  if (isLoading)
-    return <Text style={{ padding: 20 }}>Loading vendors...</Text>;
-  if (isError)
-    return <Text style={{ color: "red" }}>Error: {error.message}</Text>;
+  if (isLoading) {
+    return <VendorCardSkelton />;
+  }
 
   // get producsts for specific (vendorId)
   // const products = productsData.filter(

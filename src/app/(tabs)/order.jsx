@@ -18,6 +18,9 @@ import { useSetAtom } from "jotai";
 import { selectedOrderItems } from "../../atom";
 import { supabase } from "../../lib/supabase";
 
+import VendorCardSkelton from "../../skeleton/VendorCardSkelton";
+import ErrorState from "../../components/ErrorState";
+
 const OrderList = () => {
   const router = useRouter();
   const setOrderItems = useSetAtom(selectedOrderItems);
@@ -67,6 +70,7 @@ const OrderList = () => {
     isLoading,
     isError,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["ordersHistory"],
     queryFn: () => fetchUserOrders(session.user.id),
@@ -81,11 +85,18 @@ const OrderList = () => {
     refetchIntervalInBackground: true,
   });
 
-  if (isLoading)
-    return <Text style={{ padding: 20 }}>Loading vendors...</Text>;
-  if (isError)
-    return <Text style={{ color: "red" }}>Error: {error.message}</Text>;
+  if (isLoading) {
+    return <VendorCardSkelton />;
+  }
 
+  if (isError) {
+    return (
+      <ErrorState
+        title="Fetch Failed"
+        onRetry={refetch} // Passes the refetch function
+      />
+    );
+  }
   // handling orders onPress
   const handleOrderPress = (orderItem) => {
     setOrderItems(orderItem);

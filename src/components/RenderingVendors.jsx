@@ -1,17 +1,20 @@
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useSetAtom } from "jotai";
-import {
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
-} from "react-native";
-import { supabase } from "../lib/supabase"
+import { supabase } from "../lib/supabase";
 
 import { VendorId, VendorName } from "../atom.jsx";
+import VendorCardSkelton from "../skeleton/VendorCardSkelton.jsx";
+import ErrorState from "../components/ErrorState.jsx";
 
 const RenderingVendors = () => {
   const router = useRouter();
@@ -32,14 +35,24 @@ const RenderingVendors = () => {
     isLoading,
     isError,
     error,
+    refetch
   } = useQuery({
     queryKey: ["vendors"],
     queryFn: fetchVendors,
   });
 
-  if (isLoading) return <Text style={{ padding: 20 }}>Loading vendors...</Text>;
-  if (isError)
-    return <Text style={{ color: "red" }}>Error: {error.message}</Text>;
+  if (error) {
+    return (
+      <ErrorState
+        title="Fetch Failed"
+        onRetry={refetch} // Passes the refetch function
+      />
+    );
+  }
+
+  if (isLoading) {
+    return <VendorCardSkelton />;
+  }
 
   return (
     <FlatList
