@@ -2,13 +2,20 @@
 import * as WebBrowser from "expo-web-browser";
 import { supabaseServerLess } from "../../lib/supabaseServerLess";
 
-const startChapaPayment = async (amount) => {
-  // 2. Call Edge Function
+const startChapaPayment = async (amount, session, cart) => {
+  const userId = session.user.id;
+  if (!userId) {
+    throw new Error("You must be logged in to make a payment.");
+  }
+
+  // 1. Call Edge Function
   const { data, error } = await supabaseServerLess.functions.invoke(
     "smooth-worker",
     {
       body: {
         amount: amount,
+        user_id: userId,
+        items: cart
       },
     },
   );

@@ -73,10 +73,16 @@ const OrderList = () => {
     refetchInterval: 5000, // Fetch every 10 seconds
     // Optional: only fetch if the user is actually looking at the screen
     refetchOnWindowFocus: true,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+
+    // If you want the 5s timer to keep ticking while the app is in background:
+    refetchIntervalInBackground: true,
   });
 
   if (isLoading)
-    return <Text style={{ padding: 20 }}>Loading restaurants...</Text>;
+    return <Text style={{ padding: 20 }}>Loading vendors...</Text>;
   if (isError)
     return <Text style={{ color: "red" }}>Error: {error.message}</Text>;
 
@@ -84,7 +90,7 @@ const OrderList = () => {
   const handleOrderPress = (orderItem) => {
     setOrderItems(orderItem);
     router.push("/orderDetails");
-    console.log("orderItemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm.", orderItem)
+    console.log("orderItemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm.", orderItem);
   };
 
   const renderOrderItem = ({ item }) => {

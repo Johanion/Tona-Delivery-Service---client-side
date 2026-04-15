@@ -1,23 +1,28 @@
 import React, { useState, useEffect } from "react"; // 1. Added useEffect
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import startChapaPayment from "./paymentService";
+import { useAuth } from "../../providers/AuthProvider";
+import {checkoutProductsAtom} from "../../atom"
+import { useAtom } from "jotai";
 
 const ChapaScreen = () => {
   const [loading, setLoading] = useState(false);
+  const {session, loading: authLoading} = useAuth()
+  const [cart] = useAtom(checkoutProductsAtom)
 
   // 2. Define the payment trigger logic
   const handleAutomaticPayment = async () => {
     setLoading(true);
     try {
-      // Note: Passing hardcoded '100' and 'cart' for test
-      const result = await startChapaPayment(100);
+      const result = await startChapaPayment(session, cart);
       if (result) {
         setLoading(false);
+        
       }
       console.log("Payment Window Closed:", result);
     } catch (err) {
       setLoading(false);
-      alert("Error: " + err.message);
+      alert("Error: " + "Try Again Later or use Bank transfer option");
     } finally {
       setLoading(false);
     }
@@ -30,7 +35,7 @@ const ChapaScreen = () => {
 
   return (
     <View style={styles.container}>
-      
+
       {/* 4. We only show the loader since it triggers automatically */}
       {loading && (
         <View style={styles.loadingCard}>

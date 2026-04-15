@@ -18,16 +18,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 
 import { supabase } from "../../lib/supabase";
-import { RestaurantId } from "../../atom";
-import { RestaurantName } from "../../atom";
+import { VendorId} from "../../atom";
+import { VendorName } from "../../atom";
 import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom";
 
 const FoodOrder = () => {
   const [cart] = useAtom(cartAtom);
   const [, addToCart] = useAtom(addToCartAtom);
   const [, removeFromCart] = useAtom(removeFromCartAtom);
-  const [restaurantId] = useAtom(RestaurantId);
-  const [restaurantName] = useAtom(RestaurantName);
+  const [vendorId] = useAtom(VendorId);
+  const [vendorName] = useAtom(VendorName);
 
   const { width } = Dimensions.get("window");
   const router = useRouter();
@@ -38,11 +38,11 @@ const FoodOrder = () => {
   );
 
   // calling supabase to fetch products
-  const fetchProductsByRestaurant = async (rId) => {
+  const fetchProductsByVendors = async (vId) => {
     const { data, error } = await supabase
       .from("products")
       .select("*")
-      .eq("restaurant_id", rId); // Let the database do the filtering
+      .eq("vendor_id", vId); // Let the database do the filtering
 
     if (error) throw new Error(error.message);
     return data;
@@ -56,22 +56,22 @@ const FoodOrder = () => {
     error,
   } = useQuery({
     queryKey: ["products"],
-    queryFn: () => fetchProductsByRestaurant(restaurantId),
-    enabled: !!restaurantId, // Only run if we have an ID
+    queryFn: () => fetchProductsByVendors(vendorId),
+    enabled: !!vendorId, // Only run if we have an ID
   });
 
   console.log(products)
 
   if (isLoading)
-    return <Text style={{ padding: 20 }}>Loading restaurants...</Text>;
+    return <Text style={{ padding: 20 }}>Loading vendors...</Text>;
   if (isError)
     return <Text style={{ color: "red" }}>Error: {error.message}</Text>;
 
-  // get producsts for specific (RestaurantId)
+  // get producsts for specific (vendorId)
   // const products = productsData.filter(
-  //   (item) => item.restaurant_id == restaurantId,
+  //   (item) => item.vendor_id == vendorId,
   // );
-  console.log(restaurantId);
+  console.log(vendorId);
 
   const getQuantity = (productId) => {
     const item = cart.find((p) => p.id === productId);
@@ -97,7 +97,7 @@ const FoodOrder = () => {
           <View style={styles.infoWrapper}>
             <View>
               <View style={styles.headerRow}>
-                <Text style={styles.categoryLabel}>{restaurantName}</Text>
+                <Text style={styles.categoryLabel}>{vendorName}</Text>
                 <View style={styles.ratingBadge}>
                   <Feather name="star" size={10} color="#FFB800" />
                   <Text style={styles.ratingText}>4.8</Text>

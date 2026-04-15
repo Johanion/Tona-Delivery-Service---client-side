@@ -1,26 +1,26 @@
+import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
-  View,
-  TouchableOpacity,
-  StatusBar,
   TextInput,
-  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useEffect, useState } from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
-import { FontAwesome5, Ionicons, Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 
-import RenderingFeaturesCategories from "../../components/RenderingFeaturesCategories.jsx";
-import featuredCategoriesData from "../../constants/featuredCategoriesData.js";
-import RenderingRestaurants from "../../components/RenderingRestaurants.jsx";
 import ConfirmModal from "../../components/ConfirmModal.jsx";
+import RenderingFeaturesCategories from "../../components/RenderingFeaturesCategories.jsx";
+import RenderingVendors from "../../components/RenderingVendors.jsx";
+import featuredCategoriesData from "../../constants/featuredCategoriesData.js";
 
-import GetLocation from "../../components/GetLocation.js";
 import { useAtom } from "jotai";
 import { cartAtom } from "../../atom";
+import GetLocation from "../../components/GetLocation.js";
 import { supabase } from "../../lib/supabase";
 
 const index = () => {
@@ -157,7 +157,7 @@ const index = () => {
                 />
 
                 <TextInput
-                  placeholder="Search restaurants, food, hotels..."
+                  placeholder="Search restaurants, vendors, food, hotels..."
                   placeholderTextColor="rgba(0,0,0,0.4)"
                   style={styles.input}
                 />
@@ -173,9 +173,9 @@ const index = () => {
               <RenderingFeaturesCategories data={featuredCategoriesData} />
             </View>
 
-            {/* Rendering restaurants */}
+            {/* Rendering vendors */}
             <View style={{ flex: 1, marginTop: 10, marginBottom: 100 }}>
-              <RenderingRestaurants />
+              <RenderingVendors />
             </View>
           </ScrollView>
         </LinearGradient>

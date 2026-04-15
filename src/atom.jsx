@@ -5,8 +5,8 @@ import { atom } from "jotai";
 export const cartAtom = atom([]);
 export const selectedPaymentEnd = atom(null);
 export const totalAmount = atom (null)
-export const RestaurantId = atom (null)
-export const RestaurantName = atom (null)
+export const VendorId = atom (null)
+export const VendorName = atom (null)
 export const checkoutProductsAtom = atom([]);
 export const selectedOrderItems = atom([])
 

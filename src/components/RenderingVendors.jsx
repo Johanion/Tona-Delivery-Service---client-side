@@ -1,27 +1,23 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  Platform,
-} from "react-native";
-import React from "react";
-import { useRouter } from "expo-router";
-import { useAtom, useSetAtom } from "jotai";
-import { supabase } from "../lib/supabase";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { useSetAtom } from "jotai";
+import {
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from "react-native";
+import { supabase } from "../lib/supabase"
 
-import data from "../constants/restaurants.js";
-import { RestaurantId } from "../atom.jsx";
-import { RestaurantName } from "../atom.jsx";
+import { VendorId, VendorName } from "../atom.jsx";
 
-const RenderingRestaurants = () => {
+const RenderingVendors = () => {
   const router = useRouter();
-  const setRestaurantId = useSetAtom(RestaurantId);
-  const setRestaurantName = useSetAtom(RestaurantName);
-  
+  const setVendorId = useSetAtom(VendorId);
+  const setVendorName = useSetAtom(VendorName);
+
   // calling supabase to fetch vendors
   const fetchVendors = async () => {
     const { data, error } = await supabase.from("vendors").select("*");
@@ -31,13 +27,19 @@ const RenderingRestaurants = () => {
   };
 
   // TanStack Query Hook
-  const { data: vendors, isLoading, isError, error } = useQuery({
+  const {
+    data: vendors,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["vendors"],
     queryFn: fetchVendors,
   });
 
-  if (isLoading) return <Text style={{ padding: 20 }}>Loading restaurants...</Text>;
-  if (isError) return <Text style={{ color: 'red' }}>Error: {error.message}</Text>;
+  if (isLoading) return <Text style={{ padding: 20 }}>Loading vendors...</Text>;
+  if (isError)
+    return <Text style={{ color: "red" }}>Error: {error.message}</Text>;
 
   return (
     <FlatList
@@ -53,8 +55,8 @@ const RenderingRestaurants = () => {
             activeOpacity={0.9}
             onPress={() => {
               router.push("../(orders)/food_order");
-              setRestaurantId(item.id);
-              setRestaurantName(item.name);
+              setVendorId(item.id);
+              setVendorName(item.name);
             }}
           >
             <View style={styles.imageContainer}>
@@ -80,7 +82,7 @@ const RenderingRestaurants = () => {
   );
 };
 
-export default RenderingRestaurants;
+export default RenderingVendors;
 
 const styles = StyleSheet.create({
   card: {

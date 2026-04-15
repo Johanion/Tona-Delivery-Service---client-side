@@ -37,9 +37,7 @@ const Carts = () => {
 
   // calling supabase to fetch products
   const fetchVendors = async () => {
-    const { data, error } = await supabase
-      .from("vendors")
-      .select("*")
+    const { data, error } = await supabase.from("vendors").select("*");
 
     if (error) throw new Error(error.message);
     return data;
@@ -47,7 +45,7 @@ const Carts = () => {
 
   // TanStack Query Hook
   const {
-    data: restaurant,
+    data: vendor,
     isLoading,
     isError,
     error,
@@ -70,15 +68,24 @@ const Carts = () => {
     }));
 
     setCheckoutProducts(products);
-
     router.push("/mainPayment");
-    console.log(products);
   };
 
-  // group cart based on the restaurant /memoized/
+  // handle checkout for all chapa
+  const hanldeCheckoutChapa = () => {
+    const products = cart.map((item) => ({
+      product_id: item.id,
+      quantity: item.amount,
+    }));
+
+    setCheckoutProducts(products);
+    router.push("../chapa");
+  };
+
+  // group cart based on the vendors /memoized/
   const groupedArray = useMemo(() => {
     const groupedCart = cart.reduce((acc, item) => {
-      const key = item.restaurant_id;
+      const key = item.vendor_id;
 
       if (!acc[key]) acc[key] = [];
 
@@ -90,22 +97,22 @@ const Carts = () => {
   }, [cart]);
 
   const renderItem = ({ item }) => {
-    const restaurantId = item[0];
+    const vendorId = item[0];
     const items = item[1];
-    const restaurantName = restaurant.find((r) => r.id == restaurantId)?.name;
+    const vendorName = vendor.find((r) => r.id == vendorId)?.name;
 
     return (
       <>
-        {/* Restaurants header */}
-        <View style={styles.restaurantHeader}>
-          <View style={styles.restaurantLeft}>
+        {/* Vendors header */}
+        <View style={styles.vendorHeader}>
+          <View style={styles.vendorLeft}>
             <View style={styles.iconCircle}>
               <MaterialIcons name="restaurant" size={18} color="#FF3B5C" />
             </View>
 
             <View>
-              <Text style={styles.restaurantName}>{restaurantName}</Text>
-              <Text style={styles.restaurantSub}>Restaurant orders</Text>
+              <Text style={styles.vendorName}>{vendorName}</Text>
+              <Text style={styles.vendorSub}>Vendor orders</Text>
             </View>
           </View>
 
@@ -124,7 +131,7 @@ const Carts = () => {
                   <Text style={styles.productName} numberOfLines={1}>
                     {item.product_name}
                   </Text>
-                  <Text style={styles.restaurant}>{restaurantName}</Text>
+                  <Text style={styles.vendor}>{vendorName}</Text>
                 </View>
               </View>
 
@@ -260,8 +267,8 @@ const Carts = () => {
               <TouchableOpacity
                 style={styles.paymentOption}
                 onPress={() => {
+                  hanldeCheckoutChapa()
                   setVisible(false);
-                  router.push("../chapa");
                 }}
               >
                 <View
@@ -374,7 +381,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   productName: { fontSize: 17, fontWeight: "800", color: "#1A1A1A" },
-  restaurant: {
+  vendor: {
     fontSize: 12,
     color: "#FF3B5C",
     fontWeight: "600",
@@ -551,7 +558,7 @@ const styles = StyleSheet.create({
   miniBadgeText: { color: "#FFF", fontSize: 10, fontWeight: "900" },
   closeModal: { marginTop: 10, padding: 15, alignItems: "center" },
   closeModalText: { color: "#BBB", fontWeight: "700", fontSize: 15 },
-  restaurantHeader: {
+  vendorHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -560,7 +567,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
 
-  restaurantLeft: {
+  vendorLeft: {
     flexDirection: "row",
     alignItems: "center",
   },
@@ -575,13 +582,13 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 
-  restaurantName: {
+  vendorName: {
     fontSize: 18,
     fontWeight: "900",
     color: "#1A1A1A",
   },
 
-  restaurantSub: {
+  vendorSub: {
     fontSize: 11,
     color: "#888",
     marginTop: 2,
