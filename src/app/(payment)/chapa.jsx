@@ -3,18 +3,20 @@ import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import startChapaPayment from "./paymentService";
 import { useAuth } from "../../providers/AuthProvider";
 import {checkoutProductsAtom} from "../../atom"
+import { deliveryNoteAtom } from "../../atom";
 import { useAtom } from "jotai";
 
 const ChapaScreen = () => {
   const [loading, setLoading] = useState(false);
   const {session, loading: authLoading} = useAuth()
   const [cart] = useAtom(checkoutProductsAtom)
+  const [deliveryNote] = useAtom(deliveryNoteAtom)
 
   // 2. Define the payment trigger logic
   const handleAutomaticPayment = async () => {
     setLoading(true);
     try {
-      const result = await startChapaPayment(session, cart);
+      const result = await startChapaPayment(session, cart, deliveryNote);
       if (result) {
         setLoading(false);
         

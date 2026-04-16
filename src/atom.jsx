@@ -9,6 +9,7 @@ export const VendorId = atom (null)
 export const VendorName = atom (null)
 export const checkoutProductsAtom = atom([]);
 export const selectedOrderItems = atom([])
+export const deliveryNoteAtom = atom ()
 
 // Add a product by ID or increment
 export const addToCartAtom = atom(

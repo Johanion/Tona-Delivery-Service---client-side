@@ -8,6 +8,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GoogleMaps, AppleMaps } from "expo-maps";
 import {
   Feather,
@@ -46,6 +47,9 @@ export default function MapScreen() {
         selectedLocation.longitude,
       );
 
+      // store locally
+      await AsyncStorage.setItem("userAdress", realAddress); // cache it
+
       const { data: addressData, error: addressError } = await supabase
         .from("address")
         .insert([
@@ -68,6 +72,7 @@ export default function MapScreen() {
             user_id: session.user.id,
             address_id: addressData.id,
             label: selectedLabel || "Home", // "Home", "Work", etc.
+            is_default: true,
           },
         ]);
 
@@ -104,7 +109,7 @@ export default function MapScreen() {
             <AppleMaps.View
               style={StyleSheet.absoluteFill}
               cameraPosition={cameraPositions}
-              onCameraMove={handleCameraMove} 
+              onCameraMove={handleCameraMove}
             />
           ) : (
             <GoogleMaps.View

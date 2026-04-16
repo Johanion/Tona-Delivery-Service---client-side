@@ -2,7 +2,7 @@
 import * as WebBrowser from "expo-web-browser";
 import { supabaseServerLess } from "../../lib/supabaseServerLess";
 
-const startChapaPayment = async (session, cart) => {
+const startChapaPayment = async (session, cart, deliveryNote) => {
   const userId = session.user.id;
   if (!userId) {
     throw new Error("Try Again Later");
@@ -18,6 +18,7 @@ const startChapaPayment = async (session, cart) => {
       body: {
         user_id: userId,
         cart: cart,
+        description: deliveryNote
       },
     },
   );

@@ -19,6 +19,7 @@ import RenderingVendors from "../../components/RenderingVendors.jsx";
 import featuredCategoriesData from "../../constants/featuredCategoriesData.js";
 
 import { useAtom } from "jotai";
+import { useAuth } from "../../providers/AuthProvider";
 import { cartAtom } from "../../atom";
 import GetLocation from "../../components/GetLocation.js";
 import { supabase } from "../../lib/supabase";
@@ -28,13 +29,14 @@ const index = () => {
   const [userAdress, setUserAdress] = useState();
   const router = useRouter();
   const [cart] = useAtom(cartAtom);
+  const {session} = useAuth()
 
   // total quantity (not number of products, but total items)
   const totalItems = cart.reduce((sum, item) => sum + item.amount, 0);
 
   useEffect(() => {
     const fetchAddress = async () => {
-      const userRealAdress = await GetLocation();
+      const userRealAdress = await GetLocation(session.user.id);
       console.log("I got the real user address:", userRealAdress);
       setUserAdress(userRealAdress);
     };

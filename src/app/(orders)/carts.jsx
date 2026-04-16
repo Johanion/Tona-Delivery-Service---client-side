@@ -17,12 +17,20 @@ import { useAtom, useSetAtom } from "jotai";
 import { useRouter } from "expo-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "../../providers/AuthProvider";
 import Modal from "react-native-modal";
-import { MaterialIcons, Ionicons, Feather } from "@expo/vector-icons";
-
+import {
+  MaterialIcons,
+  Ionicons,
+  Feather,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+import { supabase } from "../../lib/supabase";
 import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom.jsx";
 import { totalAmount } from "../../atom.jsx";
 import { checkoutProductsAtom } from "../../atom";
+import { deliveryNoteAtom } from "../../atom";
+import AddressSelectionModal from "../../components/AdressSelectionModal.jsx";
 
 const { width } = Dimensions.get("window");
 
@@ -31,19 +39,21 @@ const Carts = () => {
   const [, addToCart] = useAtom(addToCartAtom);
   const [, removeFromCart] = useAtom(removeFromCartAtom);
   const [visible, setVisible] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const setGrandPaymentAmount = useSetAtom(totalAmount);
   const setCheckoutProducts = useSetAtom(checkoutProductsAtom);
+  const [deliveryNote, setDeliveryNote] = useAtom(deliveryNoteAtom);
   const router = useRouter();
+  const { session } = useAuth();
 
   // calling supabase to fetch products
   const fetchVendors = async () => {
     const { data, error } = await supabase.from("vendors").select("*");
-
     if (error) throw new Error(error.message);
     return data;
   };
 
-  // TanStack Query Hook
+  // get all vendors
   const {
     data: vendor,
     isLoading,
@@ -53,6 +63,61 @@ const Carts = () => {
     queryKey: ["vendors"],
     queryFn: fetchVendors,
   });
+
+  // get user's all location
+  const userLocations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("address_profile")
+        .select(
+          `
+        id,
+        label,
+        is_default,
+        address:address_id (
+          id,
+          latitude,
+          longitude,
+          adress
+        )
+      `,
+        )
+        .eq("user_id", session.user.id); // Filter by current user
+
+      if (error) throw error;
+
+      return data;
+      /* Data will look like:
+       [{ 
+         label: "Home", 
+         address: { adress: "Bole, Addis Ababa", latitude: 9.03, ... } 
+       }] 
+    */
+    } catch (error) {
+      console.error("Error fetching addresses:", error.message);
+      return [];
+    }
+  };
+  const {
+    data: userLocationsData,
+    isLoading: userLocationError,
+    isError: userLocationsIsError,
+    error: userLocationsError,
+  } = useQuery({
+    queryKey: ["userLocations"],
+    queryFn: userLocations,
+    refetchInterval: 3000, // Auto-refetch every 3 seconds
+  });
+
+  // This will find the specific object where is_default is true
+  const defaultLocation = userLocationsData?.find(
+    (item) => item.is_default === true,
+  );
+
+  // Accessing the data safely:
+  const defaultLabel = defaultLocation?.label; // e.g., "Home"
+  const defaultStreet = defaultLocation?.address?.adress; // e.g., "Roosevelt Street..."
+  const defaultLat = defaultLocation?.address?.latitude;
 
   // get total price for all orders
   const totalPrice = cart.reduce(
@@ -80,6 +145,15 @@ const Carts = () => {
 
     setCheckoutProducts(products);
     router.push("../chapa");
+  };
+
+  const changeActiveAddressLocation = async (activeAdressItem) => {
+    const { error } = await supabase
+      .from("address_profile")
+      .update({ is_default: true })
+      .eq("id", activeAdressItem.id);
+
+    if (error) throw error;
   };
 
   // group cart based on the vendors /memoized/
@@ -222,17 +296,87 @@ const Carts = () => {
 
           {/* Premium Footer */}
           <View style={styles.footer}>
-            <View style={styles.totalRow}>
-              <View>
-                <Text style={styles.totalLabel}>Grand Total</Text>
+            {/* SECTION 1: LOCATION & NOTES */}
+            <View style={styles.deliverySection}>
+              <Text style={styles.sectionTitle}>Delivery Details</Text>
+
+              {/* Custom Dropdown-style Button */}
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={[styles.card2, styles.selectedCard]}
+                onPress={() => {
+                  setIsModalOpen(true);
+                }}
+              >
+                {/* Icon Wing */}
+                <View style={[styles.iconContainer, styles.selectedIconBg]}>
+                  <MaterialCommunityIcons
+                    name={
+                      defaultLabel === "gym"
+                        ? defaultLabel === "other"
+                          ? defaultLabel === "home"
+                            ? "home"
+                            : "briefcase"
+                          : "map-marker"
+                        : "dumbbell"
+                    }
+                    size={24}
+                    color={"#FFF"}
+                  />
+                </View>
+
+                {/* Text Content */}
+                <View style={styles.info}>
+                  <View style={styles.headerRow}>
+                    <Text style={styles.label}>
+                      {defaultLabel || "Saved Location"}
+                    </Text>
+                    <View style={styles.activeBadge}>
+                      <Ionicons name="checkmark" size={12} color="#4CAF50" />
+                      <Text style={styles.activeText}>Active</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.address} numberOfLines={2}>
+                    {defaultStreet}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Description / Delivery Notes Input */}
+              <View style={styles.noteContainer}>
+                <Feather
+                  name="edit-3"
+                  size={16}
+                  color="#999"
+                  style={styles.noteIcon}
+                />
+                <TextInput
+                  style={styles.noteInput}
+                  placeholder="Add delivery notes (e.g. Floor, Gate code...)"
+                  placeholderTextColor="#BBB"
+                  value={deliveryNote} // Binding to Atom
+                  onChangeText={setDeliveryNote} // Updating Atom
+                />
               </View>
-              <Text style={styles.totalAmount}>
-                Birr {totalPrice.toFixed(2)}
-              </Text>
             </View>
 
+            {/* SECTION 2: PAYMENT SUMMARY */}
+            <View style={styles.summaryContainer}>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Delivery Fee</Text>
+                <Text style={styles.feeAmount}>120.00 ETB</Text>
+              </View>
+              <View style={styles.totalRow}>
+                <Text style={styles.grandLabel}>Grand Total</Text>
+                <Text style={styles.totalAmount}>
+                  Birr {totalPrice.toFixed(2)}
+                </Text>
+              </View>
+            </View>
+
+            {/* SECTION 3: CHECKOUT ACTION */}
             <TouchableOpacity
-              activeOpacity={0.9}
+              activeOpacity={0.8}
               onPress={() => {
                 setVisible(true);
                 setGrandPaymentAmount(totalPrice);
@@ -244,13 +388,33 @@ const Carts = () => {
                 end={{ x: 1, y: 0 }}
                 style={styles.checkoutBtn}
               >
-                <Text style={styles.checkoutBtnText}>Checkout Now</Text>
+                <View>
+                  <Text style={styles.checkoutBtnText}>Place Order</Text>
+                  <Text style={styles.checkoutBtnSub}>Secure Payment</Text>
+                </View>
                 <View style={styles.btnIconBg}>
-                  <Feather name="arrow-right" size={18} color="#FF3B5C" />
+                  <Feather name="arrow-right" size={20} color="#FF3B5C" />
                 </View>
               </LinearGradient>
             </TouchableOpacity>
           </View>
+
+          {/* allow user to select locations */}
+          <>
+            <AddressSelectionModal
+              visible={isModalOpen}
+              data={userLocationsData} // The JSON array you shared
+              onClose={() => setIsModalOpen(false)}
+              onSelect={(selectedItem) => {
+                changeActiveAddressLocation(selectedItem);
+                setIsModalOpen(false);
+              }}
+              onAddNew={() => {
+                setIsModalOpen(false);
+                router.push("../MapScreen");
+              }}
+            />
+          </>
 
           {/* Payment Modal stays same as previous high-quality version */}
           <Modal
@@ -267,7 +431,7 @@ const Carts = () => {
               <TouchableOpacity
                 style={styles.paymentOption}
                 onPress={() => {
-                  hanldeCheckoutChapa()
+                  hanldeCheckoutChapa();
                   setVisible(false);
                 }}
               >
@@ -322,6 +486,37 @@ const Carts = () => {
 export default Carts;
 
 const styles = StyleSheet.create({
+  card2: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FBFBFB",
+    padding: 16,
+    borderRadius: 22,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
+  },
+  selectedCard: {
+    backgroundColor: "#F0FFF4",
+    borderColor: "#C6F6D5",
+    borderWidth: 1.5,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: "#FFF",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  selectedIconBg: {
+    backgroundColor: "#4CAF50",
+  },
   container: { flex: 1, backgroundColor: "#FFF" },
   gradient: { flex: 1 },
 
@@ -430,22 +625,6 @@ const styles = StyleSheet.create({
     color: "#1A1A1A",
   },
 
-  // Footer Styles
-  footer: {
-    position: "aboslute",
-    bottom: 0,
-    width: width,
-    backgroundColor: "#FFF",
-    paddingHorizontal: 25,
-    paddingTop: 25,
-    paddingBottom: Platform.OS === "ios" ? 40 : 25,
-    borderTopLeftRadius: 35,
-    borderTopRightRadius: 35,
-    elevation: 25,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-  },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -637,5 +816,148 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#121212",
     textAlignVertical: "top", // important for Android
+  },
+
+  footer: {
+    backgroundColor: "white",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: Platform.OS === "ios" ? 35 : 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    // Soft shadow to lift it from the background
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 20,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#999",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 12,
+  },
+  locationSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F9F9F9",
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
+    marginBottom: 12,
+  },
+  locationInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  locationLabel: {
+    fontSize: 12,
+    color: "#999",
+  },
+  locationValue: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#333",
+  },
+  noteContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9F9F9",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    marginBottom: 20,
+  },
+  noteIcon: {
+    marginRight: 10,
+  },
+  noteInput: {
+    flex: 1,
+    height: 45,
+    fontSize: 14,
+    color: "#333",
+  },
+  summaryContainer: {
+    borderTopWidth: 1,
+    borderColor: "#F0F0F0",
+    paddingVertical: 15,
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  totalLabel: {
+    fontSize: 14,
+    color: "#777",
+  },
+  feeAmount: {
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "600",
+  },
+  grandLabel: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#1A1A1A",
+  },
+  totalAmount: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#FF3B5C",
+  },
+  checkoutBtn: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginTop: 5,
+  },
+  checkoutBtnText: {
+    color: "#FFF",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  checkoutBtnSub: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  btnIconBg: {
+    backgroundColor: "#FFF",
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#1A1A1A",
+  },
+  activeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E8F5E9",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 10,
+    gap: 4,
+  },
+  activeText: {
+    color: "#4CAF50",
+    fontSize: 10,
+    fontWeight: "900",
+    textTransform: "uppercase",
   },
 });
