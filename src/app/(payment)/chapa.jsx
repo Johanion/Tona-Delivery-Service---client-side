@@ -2,15 +2,17 @@ import React, { useState, useEffect } from "react"; // 1. Added useEffect
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import startChapaPayment from "./paymentService";
 import { useAuth } from "../../providers/AuthProvider";
-import {checkoutProductsAtom} from "../../atom"
+import { useRouter } from "expo-router";
+import { checkoutProductsAtom } from "../../atom";
 import { deliveryNoteAtom } from "../../atom";
 import { useAtom } from "jotai";
 
 const ChapaScreen = () => {
   const [loading, setLoading] = useState(false);
-  const {session, loading: authLoading} = useAuth()
-  const [cart] = useAtom(checkoutProductsAtom)
-  const [deliveryNote] = useAtom(deliveryNoteAtom)
+  const { session, loading: authLoading } = useAuth();
+  const [cart] = useAtom(checkoutProductsAtom);
+  const [deliveryNote] = useAtom(deliveryNoteAtom);
+  const router = useRouter();
 
   // 2. Define the payment trigger logic
   const handleAutomaticPayment = async () => {
@@ -19,12 +21,16 @@ const ChapaScreen = () => {
       const result = await startChapaPayment(session, cart, deliveryNote);
       if (result) {
         setLoading(false);
-        
+      }
+      if (result.type === "opened") {
+        router.push("/");
       }
       console.log("Payment Window Closed:", result);
     } catch (err) {
       setLoading(false);
-      alert("Error: " + "Try Again Later or use Bank transfer option" + err.message);
+      alert(
+        "Error: " + "Try Again Later or use Bank transfer option" + err.message,
+      );
     } finally {
       setLoading(false);
     }
@@ -37,7 +43,6 @@ const ChapaScreen = () => {
 
   return (
     <View style={styles.container}>
-
       {/* 4. We only show the loader since it triggers automatically */}
       {loading && (
         <View style={styles.loadingCard}>

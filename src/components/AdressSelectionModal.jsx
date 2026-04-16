@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   FlatList, 
   Dimensions,
-  Platform
+  Platform,
+  KeyboardAvoidingView
 } from 'react-native';
 import Modal from "react-native-modal";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";

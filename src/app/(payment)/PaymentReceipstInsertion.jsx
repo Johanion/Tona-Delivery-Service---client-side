@@ -15,7 +15,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useIsMutating, useMutation } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabase";
 import * as ImagePicker from "expo-image-picker";
@@ -25,6 +25,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { selectedPaymentEnd, totalAmount } from "../../atom.jsx";
 import { checkoutProductsAtom } from "../../atom.jsx";
+import { cartAtom } from "../../atom.jsx";
 
 const PaymentReceipstInsertion = () => {
   // user whow insert the payment data
@@ -37,6 +38,7 @@ const PaymentReceipstInsertion = () => {
   const [grandPaymentAmount, setGrandPaymentAmount] = useAtom(totalAmount);
   const [checkOutProducts, setCheckoutProducts] = useAtom(checkoutProductsAtom);
   const paymentAmount = grandPaymentAmount;
+  const  setCartEmpity = useSetAtom(cartAtom)
 
   // Support Info
   const PHONE_1 = "+251 911 123 456";
@@ -57,26 +59,15 @@ const PaymentReceipstInsertion = () => {
       .from("payment_receipts")
       .upload(filename, arrayBuffer);
 
-    // const { data: urlData } = supabase.storage
-    //   .from("payment-receipts")
-    //   .getPublicUrl(filename);
-    console.log("data", data);
     if (error) {
       throw error;
     } else {
       return data.path;
     }
-
-    // getting the uri of our image to add to the "payment_bill_table" databse
-    // if (error) throw error;
-    // const { data } = supabase.storage
-    //   .from("payment-receipts")
-    //   .getPublicUrl(filename);
-    // return data.publicUrl;
   };
 
   const products = checkOutProducts.map((item) => ({
-    product_id: item.id,
+    product_id: item.product_id,
     quantity: item.quantity,
   }));
 
@@ -93,7 +84,7 @@ const PaymentReceipstInsertion = () => {
       .select()
       .single();
 
-    if (errorPayment || !paymentData) {
+    if (errorPayment || !dataPayment) {
       console.error("Payment Step Failed:", paymentError.message);
       return;
     }
@@ -102,18 +93,21 @@ const PaymentReceipstInsertion = () => {
       .from("orders")
       .insert({
         user_id: userID,
-        total_price: paymentAmount, // this fields will be inserted based on the the producst id
-        courier_id: "cc88ee38-ada3-48f8-a9bd-61cbd12c5a10",
+        total_price: paymentAmount,
+        courier_id: null,
         description: "description",
         payment_id: dataPayment.id,
         // order_verified: false // make sure to delete this line assign falso using pgFunction
       })
       .select();
-    if (errorOrder) console.log(errorOrder);
 
+    if (errorOrder || !dataOrder) {
+      throw errorOrder;
+    }
+    const createdOrderId = dataOrder[0].id; // <--- Access index 0
     // get data on r/ship order and products
     const orderProductsPayload = products.map((item) => ({
-      order_id: dataOrder?.id,
+      order_id: createdOrderId,
       product_id: item.product_id,
       quantity: item.quantity,
     }));
@@ -125,8 +119,9 @@ const PaymentReceipstInsertion = () => {
       .select();
 
     if (errorOrderProduct) console.log(errorOrderProduct);
+    console.log("dataOrderProduct", orderProductsPayload);
 
-    return data;
+    return dataOrderProduct;
   };
 
   const mutation = useMutation({
@@ -138,6 +133,7 @@ const PaymentReceipstInsertion = () => {
     },
     onSuccess: () => {
       Alert.alert("Success", "Payment proof submitted successfully!");
+      setCartEmpity([])
       resetForm();
     },
     onError: (error) => {

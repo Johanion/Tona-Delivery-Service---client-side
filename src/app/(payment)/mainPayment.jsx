@@ -18,8 +18,8 @@ import RenderingPaymentGateway from "../../components/RenderingPaymentGateway.js
 import { totalAmount } from "../../atom.jsx";
 
 const menu = () => {
-  const [grandPaymentAmount, setGrandPaymentAmount] = useAtom(totalAmount)
-  console.log(grandPaymentAmount)
+  const [grandPaymentAmount, setGrandPaymentAmount] = useAtom(totalAmount);
+  console.log(grandPaymentAmount);
   const PAYMENT_AMOUNT = grandPaymentAmount;
 
   // Support Info
@@ -32,36 +32,56 @@ const menu = () => {
       name: "Telebirr",
       image: gateway.telebirr,
       acc: "0976070344",
-      reciever: "Samrawit Tadesse",
+      reciever: "Tona Delivery",
     },
     {
       name: "CBE ",
       image: gateway.cbeBirr,
       acc: "1000585463454",
-      reciever: "Yohannes Tadesse",
+      reciever: "Tona Delivery",
     },
     {
       name: "CBE Birr",
       image: gateway.cbeBirr,
       acc: "0976070344",
-      reciever: "Yonas Tasesse",
+      reciever: "Tona Delivery",
     },
     {
       name: "Awash Bank",
       image: gateway.awash,
       acc: "444444444444",
-      reciever: "Yohanis Taddese",
+      reciever: "Tona Delivery",
     },
-    { name: "Abyssinia Bank", image: gateway.abyssinia, acc: "5555555555" },
+    {
+      name: "Abyssinia Bank",
+      image: gateway.abyssinia,
+      acc: "5555555555",
+      reciever: "Tona Delivery",
+    },
     {
       name: "COOP",
       image: gateway.coop,
       acc: "1016800305435",
-      reciever: "Yohannes Tadesse",
+      reciever: "Tona Delivery",
     },
-    { name: "Wegagen Bank", image: gateway.wegagen, acc: "777777777777" },
-    { name: "Nib Bank", image: gateway.nib, acc: "88888888888888" },
-    { name: "Hibret Bank", image: gateway.hibret, acc: "999999999" },
+    {
+      name: "Wegagen Bank",
+      image: gateway.wegagen,
+      acc: "777777777777",
+      reciever: "Tona Delivery",
+    },
+    {
+      name: "Nib Bank",
+      image: gateway.nib,
+      acc: "88888888888888",
+      reciever: "Tona Delivery",
+    },
+    {
+      name: "Hibret Bank",
+      image: gateway.hibret,
+      acc: "999999999",
+      reciever: "Tona Delivery",
+    },
   ];
 
   const renderHeader = () => (

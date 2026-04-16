@@ -10,6 +10,7 @@ import {
   Platform,
   Dimensions,
   TextInput,
+  KeyboardAvoidingView
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -120,10 +121,12 @@ const Carts = () => {
   const defaultLat = defaultLocation?.address?.latitude;
 
   // get total price for all orders
-  const totalPrice = cart.reduce(
+  let totalPrice = cart.reduce(
     (sum, item) => sum + item.amount * item.price,
     0,
   );
+
+   totalPrice+=120
 
   // get all products
   const handleCheckout = () => {
@@ -266,218 +269,225 @@ const Carts = () => {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-
-        <LinearGradient
-          colors={["#FFDBB4", "#FFF5EB", "#FFFFFF"]}
-          style={styles.gradient}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
         >
-          {/* Refined Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButtonCircle}
-            >
-              <Feather name="chevron-left" size={24} color="#1A1A1A" />
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.headerTitle}>My Cart</Text>
-              <Text style={styles.headerSub}>{cart.length} items selected</Text>
-            </View>
-          </View>
+          <StatusBar barStyle="dark-content" />
 
-          <FlatList
-            data={groupedArray}
-            keyExtractor={(item) => item[0]}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
-
-          {/* Premium Footer */}
-          <View style={styles.footer}>
-            {/* SECTION 1: LOCATION & NOTES */}
-            <View style={styles.deliverySection}>
-              <Text style={styles.sectionTitle}>Delivery Details</Text>
-
-              {/* Custom Dropdown-style Button */}
+          <LinearGradient
+            colors={["#FFDBB4", "#FFF5EB", "#FFFFFF"]}
+            style={styles.gradient}
+          >
+            {/* Refined Header */}
+            <View style={styles.header}>
               <TouchableOpacity
-                activeOpacity={0.7}
-                style={[styles.card2, styles.selectedCard]}
-                onPress={() => {
-                  setIsModalOpen(true);
-                }}
+                onPress={() => router.back()}
+                style={styles.backButtonCircle}
               >
-                {/* Icon Wing */}
-                <View style={[styles.iconContainer, styles.selectedIconBg]}>
-                  <MaterialCommunityIcons
-                    name={
-                      defaultLabel === "gym"
-                        ? defaultLabel === "other"
-                          ? defaultLabel === "home"
-                            ? "home"
-                            : "briefcase"
-                          : "map-marker"
-                        : "dumbbell"
-                    }
-                    size={24}
-                    color={"#FFF"}
-                  />
-                </View>
-
-                {/* Text Content */}
-                <View style={styles.info}>
-                  <View style={styles.headerRow}>
-                    <Text style={styles.label}>
-                      {defaultLabel || "Saved Location"}
-                    </Text>
-                    <View style={styles.activeBadge}>
-                      <Ionicons name="checkmark" size={12} color="#4CAF50" />
-                      <Text style={styles.activeText}>Active</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.address} numberOfLines={2}>
-                    {defaultStreet}
-                  </Text>
-                </View>
+                <Feather name="chevron-left" size={24} color="#1A1A1A" />
               </TouchableOpacity>
-
-              {/* Description / Delivery Notes Input */}
-              <View style={styles.noteContainer}>
-                <Feather
-                  name="edit-3"
-                  size={16}
-                  color="#999"
-                  style={styles.noteIcon}
-                />
-                <TextInput
-                  style={styles.noteInput}
-                  placeholder="Add delivery notes (e.g. Floor, Gate code...)"
-                  placeholderTextColor="#BBB"
-                  value={deliveryNote} // Binding to Atom
-                  onChangeText={setDeliveryNote} // Updating Atom
-                />
-              </View>
-            </View>
-
-            {/* SECTION 2: PAYMENT SUMMARY */}
-            <View style={styles.summaryContainer}>
-              <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Delivery Fee</Text>
-                <Text style={styles.feeAmount}>120.00 ETB</Text>
-              </View>
-              <View style={styles.totalRow}>
-                <Text style={styles.grandLabel}>Grand Total</Text>
-                <Text style={styles.totalAmount}>
-                  Birr {totalPrice.toFixed(2)}
+              <View>
+                <Text style={styles.headerTitle}>My Cart</Text>
+                <Text style={styles.headerSub}>
+                  {cart.length} items selected
                 </Text>
               </View>
             </View>
 
-            {/* SECTION 3: CHECKOUT ACTION */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                setVisible(true);
-                setGrandPaymentAmount(totalPrice);
-              }}
-            >
-              <LinearGradient
-                colors={["#FF4B68", "#FF3B5C"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.checkoutBtn}
-              >
-                <View>
-                  <Text style={styles.checkoutBtnText}>Place Order</Text>
-                  <Text style={styles.checkoutBtnSub}>Secure Payment</Text>
-                </View>
-                <View style={styles.btnIconBg}>
-                  <Feather name="arrow-right" size={20} color="#FF3B5C" />
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-
-          {/* allow user to select locations */}
-          <>
-            <AddressSelectionModal
-              visible={isModalOpen}
-              data={userLocationsData} // The JSON array you shared
-              onClose={() => setIsModalOpen(false)}
-              onSelect={(selectedItem) => {
-                changeActiveAddressLocation(selectedItem);
-                setIsModalOpen(false);
-              }}
-              onAddNew={() => {
-                setIsModalOpen(false);
-                router.push("../MapScreen");
-              }}
+            <FlatList
+              data={groupedArray}
+              keyExtractor={(item) => item[0]}
+              renderItem={renderItem}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
             />
-          </>
 
-          {/* Payment Modal stays same as previous high-quality version */}
-          <Modal
-            isVisible={visible}
-            onBackdropPress={() => setVisible(false)}
-            backdropOpacity={0.3}
-            style={styles.modal}
-            onSwipeComplete={() => setVisible(false)}
-            swipeDirection="down"
-          >
-            <View style={styles.modalContent}>
-              <View style={styles.modalHandle} />
-              <Text style={styles.modalTitle}>Payment Method</Text>
-              <TouchableOpacity
-                style={styles.paymentOption}
-                onPress={() => {
-                  hanldeCheckoutChapa();
-                  setVisible(false);
-                }}
-              >
-                <View
-                  style={[styles.paymentIcon, { backgroundColor: "#6c5ce7" }]}
+            {/* Premium Footer */}
+            <View style={styles.footer}>
+              {/* SECTION 1: LOCATION & NOTES */}
+              <View style={styles.deliverySection}>
+                <Text style={styles.sectionTitle}>Delivery Details</Text>
+
+                {/* Custom Dropdown-style Button */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  style={[styles.card2, styles.selectedCard]}
+                  onPress={() => {
+                    setIsModalOpen(true);
+                  }}
                 >
-                  <Ionicons name="flash" size={24} color="#FFF" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.paymentName}>Chapa</Text>
-                  <Text style={styles.paymentSub}>Secure Instant Pay</Text>
-                </View>
-                <View style={styles.miniBadge}>
-                  <Text style={styles.miniBadgeText}>Reccommended</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.paymentOption}
-                onPress={() => {
-                  handleCheckout();
-                  setVisible(false);
-                }}
-              >
-                <View
-                  style={[styles.paymentIcon, { backgroundColor: "#4CAF50" }]}
-                >
-                  <MaterialIcons
-                    name="account-balance"
-                    size={24}
-                    color="#FFF"
+                  {/* Icon Wing */}
+                  <View style={[styles.iconContainer, styles.selectedIconBg]}>
+                    <MaterialCommunityIcons
+                      name={
+                        defaultLabel === "gym"
+                          ? defaultLabel === "other"
+                            ? defaultLabel === "home"
+                              ? "home"
+                              : "briefcase"
+                            : "map-marker"
+                          : "dumbbell"
+                      }
+                      size={24}
+                      color={"#FFF"}
+                    />
+                  </View>
+
+                  {/* Text Content */}
+                  <View style={styles.info}>
+                    <View style={styles.headerRow}>
+                      <Text style={styles.label}>
+                        {defaultLabel || "Saved Location"}
+                      </Text>
+                      <View style={styles.activeBadge}>
+                        <Ionicons name="checkmark" size={12} color="#4CAF50" />
+                        <Text style={styles.activeText}>Active</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.address} numberOfLines={2}>
+                      {defaultStreet}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Description / Delivery Notes Input */}
+                <View style={styles.noteContainer}>
+                  <Feather
+                    name="edit-3"
+                    size={16}
+                    color="#999"
+                    style={styles.noteIcon}
+                  />
+                  <TextInput
+                    style={styles.noteInput}
+                    placeholder="Add delivery notes (e.g. Floor, Gate code...)"
+                    placeholderTextColor="#BBB"
+                    value={deliveryNote} // Binding to Atom
+                    onChangeText={setDeliveryNote} // Updating Atom
                   />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.paymentName}>Bank Transfer</Text>
-                  <Text style={styles.paymentSub}>Manual Verification</Text>
+              </View>
+
+              {/* SECTION 2: PAYMENT SUMMARY */}
+              <View style={styles.summaryContainer}>
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>Delivery Fee</Text>
+                  <Text style={styles.feeAmount}>120.00 ETB</Text>
                 </View>
-              </TouchableOpacity>
+                <View style={styles.totalRow}>
+                  <Text style={styles.grandLabel}>Grand Total</Text>
+                  <Text style={styles.totalAmount}>
+                    Birr {totalPrice.toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+
+              {/* SECTION 3: CHECKOUT ACTION */}
               <TouchableOpacity
-                style={styles.closeModal}
-                onPress={() => setVisible(false)}
+                activeOpacity={0.8}
+                onPress={() => {
+                  setVisible(true);
+                  setGrandPaymentAmount(totalPrice);
+                }}
               >
-                <Text style={styles.closeModalText}>Go Back</Text>
+                <LinearGradient
+                  colors={["#FF4B68", "#FF3B5C"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.checkoutBtn}
+                >
+                  <View>
+                    <Text style={styles.checkoutBtnText}>Place Order</Text>
+                    <Text style={styles.checkoutBtnSub}>Secure Payment</Text>
+                  </View>
+                  <View style={styles.btnIconBg}>
+                    <Feather name="arrow-right" size={20} color="#FF3B5C" />
+                  </View>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
-          </Modal>
-        </LinearGradient>
+
+            {/* allow user to select locations */}
+            <>
+              <AddressSelectionModal
+                visible={isModalOpen}
+                data={userLocationsData} // The JSON array you shared
+                onClose={() => setIsModalOpen(false)}
+                onSelect={(selectedItem) => {
+                  changeActiveAddressLocation(selectedItem);
+                  setIsModalOpen(false);
+                }}
+                onAddNew={() => {
+                  setIsModalOpen(false);
+                  router.push("../MapScreen");
+                }}
+              />
+            </>
+
+            {/* Payment Modal stays same as previous high-quality version */}
+            <Modal
+              isVisible={visible}
+              onBackdropPress={() => setVisible(false)}
+              backdropOpacity={0.3}
+              style={styles.modal}
+              onSwipeComplete={() => setVisible(false)}
+              swipeDirection="down"
+            >
+              <View style={styles.modalContent}>
+                <View style={styles.modalHandle} />
+                <Text style={styles.modalTitle}>Payment Method</Text>
+                <TouchableOpacity
+                  style={styles.paymentOption}
+                  onPress={() => {
+                    hanldeCheckoutChapa();
+                    setVisible(false);
+                  }}
+                >
+                  <View
+                    style={[styles.paymentIcon, { backgroundColor: "#6c5ce7" }]}
+                  >
+                    <Ionicons name="flash" size={24} color="#FFF" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.paymentName}>Chapa</Text>
+                    <Text style={styles.paymentSub}>Secure Instant Pay</Text>
+                  </View>
+                  <View style={styles.miniBadge}>
+                    <Text style={styles.miniBadgeText}>Reccommended</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.paymentOption}
+                  onPress={() => {
+                    handleCheckout();
+                    setVisible(false);
+                  }}
+                >
+                  <View
+                    style={[styles.paymentIcon, { backgroundColor: "#4CAF50" }]}
+                  >
+                    <MaterialIcons
+                      name="account-balance"
+                      size={24}
+                      color="#FFF"
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.paymentName}>Bank Transfer</Text>
+                    <Text style={styles.paymentSub}>Manual Verification</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.closeModal}
+                  onPress={() => setVisible(false)}
+                >
+                  <Text style={styles.closeModalText}>Go Back</Text>
+                </TouchableOpacity>
+              </View>
+            </Modal>
+          </LinearGradient>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </SafeAreaProvider>
   );
