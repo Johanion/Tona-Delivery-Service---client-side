@@ -35,11 +35,15 @@ const RenderingVendors = () => {
     isLoading,
     isError,
     error,
-    refetch
+    refetch,
   } = useQuery({
     queryKey: ["vendors"],
     queryFn: fetchVendors,
   });
+  
+  if (isLoading) {
+    return <VendorCardSkelton />;
+  }
 
   if (error) {
     return (
@@ -48,10 +52,6 @@ const RenderingVendors = () => {
         onRetry={refetch} // Passes the refetch function
       />
     );
-  }
-
-  if (isLoading) {
-    return <VendorCardSkelton />;
   }
 
   return (

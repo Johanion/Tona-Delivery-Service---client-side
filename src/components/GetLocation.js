@@ -24,7 +24,7 @@ const GetLocation = async () => {
     if (reqLocation) {
       realAdress = await getAddressFromCoords(
         reqLocation.latitude,
-        reqLocation.longitude,
+        reqLocation.longitude,  
       );
     } else return null;
 

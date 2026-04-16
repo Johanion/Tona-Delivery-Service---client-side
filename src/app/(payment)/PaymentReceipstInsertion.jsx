@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useAtom } from "jotai";
 import { useIsMutating, useMutation } from "@tanstack/react-query";
-import { supabase } from "../../lib/supabase"
+import { supabase } from "../../lib/supabase";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../../providers/AuthProvider";
@@ -34,8 +34,7 @@ const PaymentReceipstInsertion = () => {
   const [senderInfo, setSenderInfo] = useState({});
   const { session, loading: authLoading } = useAuth(); // get session from AuthProvider
 
-  const [grandPaymentAmount, setGrandPaymentAmount] =
-    useAtom(totalAmount);
+  const [grandPaymentAmount, setGrandPaymentAmount] = useAtom(totalAmount);
   const [checkOutProducts, setCheckoutProducts] = useAtom(checkoutProductsAtom);
   const paymentAmount = grandPaymentAmount;
 
@@ -76,17 +75,10 @@ const PaymentReceipstInsertion = () => {
     // return data.publicUrl;
   };
 
-  // get courier based on some algorithm
-  const getCourierId = async () => {
-    return "aldj";
-  };
-
-  // get products
-  const products = [
-    { product_id: "p1", quantity: 2 },
-    { product_id: "p2", quantity: 5 },
-    { product_id: "p3", quantity: 1 },
-  ];
+  const products = checkOutProducts.map((item) => ({
+    product_id: item.id,
+    quantity: item.quantity,
+  }));
 
   // inserting payment information to databse
   const insertData = async (userID, imageUrl, bank) => {
@@ -95,23 +87,23 @@ const PaymentReceipstInsertion = () => {
       .from("payment")
       .insert({
         type: "bank",
-        image: imageUrl,
+        receipt_path: imageUrl,
         bank_name: bank,
       })
-      .select();
-    if (errorPayment) console.log(errorPayment);
+      .select()
+      .single();
 
-    // get the courier id
-    const courierId = getCourierId();
-
+    if (errorPayment || !paymentData) {
+      console.error("Payment Step Failed:", paymentError.message);
+      return;
+    }
     // ===> insert order information to orders table
     const { data: dataOrder, error: errorOrder } = await supabase
       .from("orders")
       .insert({
         user_id: userID,
-        amount: paymentAmount, // this fields will be inserted based on the the producst id
-        courier_id: courierId,
-        status: "pending",
+        total_price: paymentAmount, // this fields will be inserted based on the the producst id
+        courier_id: "cc88ee38-ada3-48f8-a9bd-61cbd12c5a10",
         description: "description",
         payment_id: dataPayment.id,
         // order_verified: false // make sure to delete this line assign falso using pgFunction
@@ -128,7 +120,7 @@ const PaymentReceipstInsertion = () => {
 
     // ===> insert order-product relation data to table
     const { data: dataOrderProduct, error: errorOrderProduct } = await supabase
-      .from("orders-products")
+      .from("orders_products")
       .insert(orderProductsPayload)
       .select();
 
@@ -392,8 +384,8 @@ const PaymentReceipstInsertion = () => {
             </View>
 
             {/* ────────────────────── Submit ────────────────────── */}
-            {(selectedMethod === "photo" && image)||
-              (selectedMethod === "reference" && senderName && ref ) ? (
+            {(selectedMethod === "photo" && image) ||
+            (selectedMethod === "reference" && senderName && ref) ? (
               <TouchableOpacity
                 style={[
                   styles.submitBtn,
