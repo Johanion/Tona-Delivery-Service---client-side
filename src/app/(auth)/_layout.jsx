@@ -24,6 +24,7 @@ const AuthLayout = () => {
       </LinearGradient>
     );
   }
+  
   return (
     <Stack>
       <Stack.Screen name="log-in" options={{ headerShown: false }} />

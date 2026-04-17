@@ -78,7 +78,7 @@ export default function SignUp() {
 
   useEffect(() => {
     const checkOnboarding = async () => {
-      const hasSeen = await AsyncStorage.getItem("hasSeenOnboardinggg");
+      const hasSeen = await AsyncStorage.getItem("hasSeenOnboardin");
       if (hasSeen === "true") setShowOnboarding(false);
     };
     checkOnboarding();
@@ -92,14 +92,19 @@ export default function SignUp() {
     setLogLoading(true);
     const email = `${phone}tona@gmail.com`;
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      await supabase.from("profile").insert({
-        id: data.user.id,
-        email: data.user.email,
-        phone_number: phone,
-        full_name: fullName,
+      const { data, signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: fullName,
+            phone_number: phone,
+            email: email,
+            request_role: "customer"
+          },
+        },
       });
+      if (signUpError) throw signUpError;
     } catch (err) {
       Alert.alert("Sign-up Error", err.message);
     } finally {
@@ -108,7 +113,7 @@ export default function SignUp() {
   };
 
   const handleDone = async () => {
-    await AsyncStorage.setItem("hasSeenOnboardinggg", "true");
+    await AsyncStorage.setItem("hasSeenOnboardin", "true");
     setShowOnboarding(false);
   };
 
@@ -133,7 +138,7 @@ export default function SignUp() {
   if (showOnboarding) {
     return (
       <SafeAreaProvider>
-        <SafeAreaView style={{flex:1}}>
+        <SafeAreaView style={{ flex: 1 }}>
           <View style={{ flex: 1 }}>
             <StatusBar barStyle="dark-content" />
             <LinearGradient
@@ -228,7 +233,6 @@ export default function SignUp() {
               />
 
               <View
-              
                 style={[
                   styles.inputWrapper,
                   focusedInput === "phone" && styles.inputFocused,

@@ -8,7 +8,7 @@ import { supabase } from "../lib/supabase";
 const GetLocation = async (userID) => {
   try {
     //1. first try to get adress from local storage with id -- "userAdress"
-    const storedAdress = await AsyncStorage.getItem("userAdress");
+    const storedAdress = await AsyncStorage.getItem("userAdressss");
     console.log(
       "stored adressssssssssssssssssssssssssssssssssssssss",
       storedAdress,
@@ -87,7 +87,7 @@ const GetLocation = async (userID) => {
     // const userAdress = getUserAdress(data.adress);
     // if (!error && data) {
 
-    await AsyncStorage.setItem("userAdress", realAdress); // cache it
+    await AsyncStorage.setItem("userAdressss", realAdress); // cache it
     return realAdress;
 
     // } else {

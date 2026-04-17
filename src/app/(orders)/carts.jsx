@@ -10,7 +10,7 @@ import {
   Platform,
   Dimensions,
   TextInput,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -126,7 +126,7 @@ const Carts = () => {
     0,
   );
 
-   totalPrice+=120
+  totalPrice += 120;
 
   // get all products
   const handleCheckout = () => {
@@ -322,12 +322,12 @@ const Carts = () => {
                     <MaterialCommunityIcons
                       name={
                         defaultLabel === "gym"
-                          ? defaultLabel === "other"
-                            ? defaultLabel === "home"
-                              ? "home"
-                              : "briefcase"
-                            : "map-marker"
-                          : "dumbbell"
+                          ? "dumbbell"
+                          : defaultLabel === "home"
+                            ? "home"
+                            : defaultLabel === "other"
+                              ? "briefcase"
+                              : "map-marker"
                       }
                       size={24}
                       color={"#FFF"}

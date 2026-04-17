@@ -9,15 +9,16 @@ import { ActivityIndicator, View } from "react-native";
 
 export default function RootLayout() {
   const { session, loading: authLoading } = useAuth();
-  console.log(session);
+  console.log("tabsSessionnnnnnnnnnnn", session);
 
-  const url = Linking.useLinkingURL();
-  if (url?.includes("successChapa")) {
-    navigation.navigate("SuccessChapa");
-  }
-  console.log(url);
+  // const url = Linking.useLinkingURL();
+  // if (url?.includes("successChapa")) {
+  //   navigation.navigate("SuccessChapa");
+  // }
+  // console.log(url);
 
   // 1. Still checking session from Supabase
+
   if (authLoading) {
     return (
       <View
@@ -28,7 +29,7 @@ export default function RootLayout() {
           backgroundColor: "#E0F2ED",
         }}
       >
-        <ActivityIndicator size="large" color="#239BA7" />
+        <ActivityIndicator size="large" color="black" />
       </View>
     );
   }

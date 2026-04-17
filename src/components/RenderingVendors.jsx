@@ -39,8 +39,9 @@ const RenderingVendors = () => {
   } = useQuery({
     queryKey: ["vendors"],
     queryFn: fetchVendors,
+    refetchInterval: 3000, // Auto-refetch every 3 seconds
   });
-  
+
   if (isLoading) {
     return <VendorCardSkelton />;
   }
