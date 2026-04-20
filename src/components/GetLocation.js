@@ -4,25 +4,25 @@ import { getUserLocation } from "../hooks/getUserLocation.js";
 import { getAddressFromCoords } from "./LocationGeocoding.jsx";
 import { supabase } from "../lib/supabase";
 
-// caching user adress
+// caching user address
 const GetLocation = async (userID) => {
   try {
-    //1. first try to get adress from local storage with id -- "userAdress"
-    const storedAdress = await AsyncStorage.getItem("userAdressss");
+    //1. first try to get address from local storage with id -- "userAddress"
+    const storedAddress = await AsyncStorage.getItem("userAddress");
     console.log(
-      "stored adressssssssssssssssssssssssssssssssssssssss",
-      storedAdress,
+      "stored addressssssssssssssssssssssssssssssssssssssss",
+      storedAddress,
     );
-    if (storedAdress !== null) {
-      return storedAdress;
+    if (storedAddress !== null) {
+      return storedAddress;
     }
 
-    //2. request user and access their adress
+    //2. request user and access their address
     const reqLocation = await getUserLocation();
-    let realAdress = null;
-    // get the reverse geocoded adress of location
+    let realAddress = null;
+    // get the reverse geocoded address of location
     if (reqLocation) {
-      realAdress = await getAddressFromCoords(
+      realAddress = await getAddressFromCoords(
         reqLocation.latitude,
         reqLocation.longitude,
       );
@@ -35,7 +35,7 @@ const GetLocation = async (userID) => {
         {
           latitude:   reqLocation.latitude,
           longitude: reqLocation.longitude,
-          adress: realAdress,
+          address: realAddress,
         },
       ])
       .select()
@@ -48,47 +48,47 @@ const GetLocation = async (userID) => {
       {
         user_id: userID,
         address_id: addressData.id,
-        label: "primary Adress", // "Home", "Work", etc.
+        label: "primary Address", // "Home", "Work", etc.
         is_default: true,
       },
     ]);
 
     if (linkError) throw linkError;
 
-    // send the data to adress table
+    // send the data to address table
     //  try {
-    //  const { data: adressData, error: adressError } = await supabase
-    //     .from("adress")
+    //  const { data: addressData, error: addressError } = await supabase
+    //     .from("address")
     //     .insert({
-    //         "adress": realAdress,
+    //         "address": realAddress,
     //         "latitude": reqLocation.lat,
     //         "longitude": reqLocation.lon
     //     }).select()
     //       .single();
 
-    //   // inserting the adress id to the user in the profile table
+    //   // inserting the address id to the user in the profile table
     //   const {data: profileData, error: profileError} = await supabase
     //       .from("profile")
     //       .insert({
-    //         adress_id: adressData.id
+    //         address_id: addressData.id
     //       })
     //     } catch(error){
     //       console.log(error)
     //     }
 
-    // getting user adress if it is not availabe in async storage
-    // const getUserAdress = (adress) => {
-    //   if (!adress) return; // handle empty/null input
+    // getting user address if it is not availabe in async storage
+    // const getUserAddress = (address) => {
+    //   if (!address) return; // handle empty/null input
     //   // Trim spaces and split by space
-    //   return adress.trim().split(" ")[0];
+    //   return address.trim().split(" ")[0];
     // };
 
     // saving to local cache
-    // const userAdress = getUserAdress(data.adress);
+    // const userAddress = getUserAddress(data.address);
     // if (!error && data) {
 
-    await AsyncStorage.setItem("userAdressss", realAdress); // cache it
-    return realAdress;
+    await AsyncStorage.setItem("userAddressss", realAddress); // cache it
+    return realAddress;
 
     // } else {
     //   console.warn("data is not saved in the databse")

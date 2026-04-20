@@ -21,13 +21,10 @@ import { session, isLoading } from "../../providers/AuthProvider";
 
 const { width } = Dimensions.get("window");
 
-const OrderDetail = () => {
+const OrderHistoryDetail = () => {
   const router = useRouter();
   const order = useAtomValue(selectedOrderItems);
-  const qrData = JSON.stringify({
-    user_id: session.user.id,
-    order_id: order.id,
-  });
+  const qrData = "This order has already Delivered!"
 
   const { subtotal, deliveryFee } = useMemo(() => {
     if (!order?.orders_products) return { subtotal: 0, deliveryFee: 0 };
@@ -436,4 +433,4 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: 12, color: "#9CA3AF", fontWeight: "600" },
 });
 
-export default OrderDetail;
+export default OrderHistoryDetail;

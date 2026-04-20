@@ -85,6 +85,7 @@ export default function SignUp() {
   }, []);
 
   const signUpWithPhone = async () => {
+    console.log("console .log again and again");
     if (!phone || !password || !fullName) {
       Alert.alert("Missing Fields", "Please complete all fields to continue.");
       return;
@@ -92,19 +93,21 @@ export default function SignUp() {
     setLogLoading(true);
     const email = `${phone}tona@gmail.com`;
     try {
-      const { data, signUpError } = await supabase.auth.signUp({
+      const { data: authData, signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            name: fullName,
-            phone_number: phone,
-            email: email,
-            request_role: "customer"
-          },
-        },
       });
-      if (signUpError) throw signUpError;
+
+      if (signUpError || !authData) throw signUpError;
+      // inserting profile data to supabse
+      const { error: profileError } = await supabase.from("profile").insert({
+        id: authData.user.id, // Must match the Auth ID exactly
+        name: fullName,
+        phone_number: phone,
+        role: "vendor", // Don't let the user set 'admin' here!
+      });
+
+      if (profileError) throw profileError;
     } catch (err) {
       Alert.alert("Sign-up Error", err.message);
     } finally {

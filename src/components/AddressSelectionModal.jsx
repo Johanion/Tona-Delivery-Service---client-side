@@ -69,7 +69,7 @@ const AddressSelectionModal = ({
             )}
           </View>
           <Text style={styles.address} numberOfLines={2}>
-            {item.address?.adress}
+            {item.address?.address}
           </Text>
         </View>
 

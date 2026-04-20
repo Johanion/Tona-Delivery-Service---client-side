@@ -34,7 +34,7 @@ const ProfileScreen = () => {
           id,
           latitude,
           longitude,
-          adress
+          address
         )
       `,
       )
@@ -55,7 +55,7 @@ const ProfileScreen = () => {
   const defaultLocation = userLocationsData?.find(
     (item) => item.is_default === true,
   );
-  const activeAddress = defaultLocation?.address?.adress || "No address set";
+  const activeAddress = defaultLocation?.address?.address || "No address set";
   const addressLabel = defaultLocation?.label || "Location";
   if (isAddrLoading) {
     return (

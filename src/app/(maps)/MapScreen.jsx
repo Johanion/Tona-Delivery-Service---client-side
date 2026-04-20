@@ -18,10 +18,12 @@ import {
 } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { getAddressFromCoords } from "../../components/LocationGeocoding";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../providers/AuthProvider";
 import Modal from "react-native-modal";
 
 export default function MapScreen() {
+  const router = useRouter()
   const [selectedLocation, setSelectedLocation] = useState({
     latitude: 9.03, // Default Addis Ababa
     longitude: 38.74,
@@ -48,7 +50,7 @@ export default function MapScreen() {
       );
 
       // store locally
-      await AsyncStorage.setItem("userAdress", realAddress); // cache it
+      await AsyncStorage.setItem("userAddress", realAddress); // cache it
 
       const { data: addressData, error: addressError } = await supabase
         .from("address")
@@ -56,7 +58,7 @@ export default function MapScreen() {
           {
             latitude: selectedLocation.latitude,
             longitude: selectedLocation.longitude,
-            adress: realAddress,
+            address: realAddress,
           },
         ])
         .select()
@@ -79,6 +81,7 @@ export default function MapScreen() {
       if (linkError) throw linkError;
 
       Alert.alert("Success", `Delivery location saved: ${realAddress}`);
+      router.back()
     } catch (err) {
       Alert.alert("Error", err.message);
     }

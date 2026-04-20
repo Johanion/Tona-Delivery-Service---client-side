@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  Touchable,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -17,6 +18,7 @@ import ConfirmModal from "../../components/ConfirmModal.jsx";
 import RenderingFeaturesCategories from "../../components/RenderingFeaturesCategories.jsx";
 import RenderingVendors from "../../components/RenderingVendors.jsx";
 import featuredCategoriesData from "../../constants/featuredCategoriesData.js";
+import { Modal } from "react-native";
 
 import { useAtom } from "jotai";
 import { useAuth } from "../../providers/AuthProvider";
@@ -26,19 +28,20 @@ import { supabase } from "../../lib/supabase";
 
 const index = () => {
   const [isModalon, setIsModalOn] = useState(false);
-  const [userAdress, setUserAdress] = useState();
+  const [userAddress, setUserAddress] = useState();
   const router = useRouter();
   const [cart] = useAtom(cartAtom);
-  const {session} = useAuth()
+  const { session } = useAuth();
+  const [showSearchOptions, setShowSearchOptions] = useState(false);
 
   // total quantity (not number of products, but total items)
   const totalItems = cart.reduce((sum, item) => sum + item.amount, 0);
 
   useEffect(() => {
     const fetchAddress = async () => {
-      const userRealAdress = await GetLocation(session.user.id);
-      console.log("I got the real user address:", userRealAdress);
-      setUserAdress(userRealAdress);
+      const userRealAddress = await GetLocation(session.user.id);
+      console.log("I got the real user address:", userRealAddress);
+      setUserAddress(userRealAddress);
     };
 
     fetchAddress();
@@ -58,8 +61,8 @@ const index = () => {
         {isModalon && (
           <ConfirmModal
             visible={isModalon}
-            title="Do you want to change your adress?"
-            subtitle={userAdress}
+            title="Do you want to change your address?"
+            subtitle={userAddress}
             onCancel={() => setIsModalOn(false)}
             onConfirm={() => {
               setIsModalOn(false);
@@ -109,7 +112,7 @@ const index = () => {
                       numberOfLines={1}
                       ellipsizeMode="tail"
                     >
-                      {userAdress}
+                      {userAddress}
                     </Text>
                   </View>
                 </View>
@@ -150,7 +153,11 @@ const index = () => {
             </View>
 
             {/* Search Bar */}
-            <View style={styles.searchContainer}>
+            <TouchableOpacity
+              style={styles.searchContainer}
+              onPress={() =>      router.push("/FilterSearchProducts")} 
+              activeOpacity={1}
+            >
               <View style={styles.searchBar}>
                 <Ionicons
                   name="search-outline"
@@ -158,17 +165,19 @@ const index = () => {
                   color="rgba(0,0,0,0.4)"
                 />
 
-                <TextInput
-                  placeholder="Search restaurants, vendors, food, hotels..."
-                  placeholderTextColor="rgba(0,0,0,0.4)"
-                  style={styles.input}
-                />
+                {/* Use Text instead of TextInput so it doesn't try to open the keyboard */}
+                <Text style={[styles.input, { color: "rgba(0,0,0,0.4)" }]}>
+                  Search restaurants, food...
+                </Text>
 
-                <TouchableOpacity style={styles.filterButton}>
+                <TouchableOpacity
+                  style={styles.filterButton}
+                  onPress={() => setShowSearchOptions(true)}
+                >
                   <Feather name="sliders" size={18} color="#FF6B00" />
                 </TouchableOpacity>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* horizontal features */}
             <View style={{ flex: 1, marginTop: 10 }}>
@@ -179,6 +188,66 @@ const index = () => {
             <View style={{ flex: 1, marginTop: 10, marginBottom: 100 }}>
               <RenderingVendors />
             </View>
+
+            {/* filter search modal */}
+            <Modal
+              visible={showSearchOptions}
+              transparent={true}
+              animationType="fade"
+              onRequestClose={() => setShowSearchOptions(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={() => setShowSearchOptions(false)}
+              >
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>
+                    What are you looking for?
+                  </Text>
+
+                  <View style={styles.optionRow}>
+                    {/* Option 1: Products */}
+                    <TouchableOpacity
+                      style={styles.optionCard}
+                      onPress={() => {
+                        setShowSearchOptions(false);
+                        router.push("/FilterSearchProducts"); // Navigate to your product page
+                      }}
+                    >
+                      <View
+                        style={[
+                          styles.iconCircle,
+                          { backgroundColor: "#FFF0E6" },
+                        ]}
+                      >
+                        <Ionicons name="fast-food" size={28} color="#FF6B00" />
+                      </View>
+                      <Text style={styles.optionText}>Products</Text>
+                    </TouchableOpacity>
+
+                    {/* Option 2: Vendors/Restaurants */}
+                    <TouchableOpacity
+                      style={styles.optionCard}
+                      onPress={() => {
+                        setShowSearchOptions(false);
+                        router.push("../FilterSearchVendors"); // Navigate to your vendor page
+                      }}
+                    >
+                      <View
+                        style={[
+                          styles.iconCircle,
+                          { backgroundColor: "#E6F7FF" },
+                        ]}
+                      >
+                        <FontAwesome5 name="store" size={24} color="#0095FF" />
+                      </View>
+                      <Text style={styles.optionText}>Vendors</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </Modal>
           </ScrollView>
         </LinearGradient>
       </SafeAreaView>
@@ -329,5 +398,58 @@ const styles = StyleSheet.create({
     fontSize: 11, // Larger text
     fontWeight: "900", // Extra bold
     lineHeight: 14, // Centers text vertically better on some devices
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)", // Dim the background
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    width: "100%",
+    backgroundColor: "#FFF",
+    borderRadius: 30,
+    padding: 25,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#2D2D2D",
+    marginBottom: 25,
+  },
+  optionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: 15,
+  },
+  optionCard: {
+    flex: 1,
+    backgroundColor: "#FAFAFA",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#EEE",
+  },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  optionText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2D2D2D",
   },
 });

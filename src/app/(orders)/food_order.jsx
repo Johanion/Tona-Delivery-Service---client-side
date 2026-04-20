@@ -163,19 +163,19 @@ const FoodOrder = () => {
   return (
     <View style={styles.mainContainer}>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView edges={["top"]} style={styles.header}>
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.welcomeText}>Good afternoon 👋</Text>
-            <Text style={styles.brandTitle}>
-              Deliciously <Text style={styles.accentText}>Yours</Text>
-            </Text>
+        <SafeAreaView edges={["top"]} style={styles.header}>
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.welcomeText}>Good afternoon 👋</Text>
+              <Text style={styles.brandTitle}>
+                Deliciously <Text style={styles.accentText}>Yours</Text>
+              </Text>
+            </View>
+            <TouchableOpacity style={styles.iconButton}>
+              <Feather name="search" size={22} color="#121212" />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.iconButton}>
-            <Feather name="search" size={22} color="#121212" />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
 
       <FlatList
         data={products}

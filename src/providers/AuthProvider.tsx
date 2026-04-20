@@ -27,9 +27,14 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       setLoading(false);
     };
     fetchSession();
-    supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setLoading(false);
     });
+        return () => subscription.unsubscribe();
+
   }, []);
 
   return (

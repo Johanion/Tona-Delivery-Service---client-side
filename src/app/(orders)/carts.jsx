@@ -31,7 +31,7 @@ import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom.jsx";
 import { totalAmount } from "../../atom.jsx";
 import { checkoutProductsAtom } from "../../atom";
 import { deliveryNoteAtom } from "../../atom";
-import AddressSelectionModal from "../../components/AdressSelectionModal.jsx";
+import AddressSelectionModal from "../../components/AddressSelectionModal.jsx";
 
 const { width } = Dimensions.get("window");
 
@@ -79,7 +79,7 @@ const Carts = () => {
           id,
           latitude,
           longitude,
-          adress
+          address
         )
       `,
         )
@@ -91,7 +91,7 @@ const Carts = () => {
       /* Data will look like:
        [{ 
          label: "Home", 
-         address: { adress: "Bole, Addis Ababa", latitude: 9.03, ... } 
+         address: { address: "Bole, Addis Ababa", latitude: 9.03, ... } 
        }] 
     */
     } catch (error) {
@@ -117,7 +117,7 @@ const Carts = () => {
 
   // Accessing the data safely:
   const defaultLabel = defaultLocation?.label; // e.g., "Home"
-  const defaultStreet = defaultLocation?.address?.adress; // e.g., "Roosevelt Street..."
+  const defaultStreet = defaultLocation?.address?.address; // e.g., "Roosevelt Street..."
   const defaultLat = defaultLocation?.address?.latitude;
 
   // get total price for all orders
@@ -150,11 +150,11 @@ const Carts = () => {
     router.push("../chapa");
   };
 
-  const changeActiveAddressLocation = async (activeAdressItem) => {
+  const changeActiveAddressLocation = async (activeAddressItem) => {
     const { error } = await supabase
       .from("address_profile")
       .update({ is_default: true })
-      .eq("id", activeAdressItem.id);
+      .eq("id", activeAddressItem.id);
 
     if (error) throw error;
   };
