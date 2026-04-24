@@ -12,6 +12,7 @@ import {
   Platform,
   StatusBar,
   Dimensions,
+  Image,
 } from "react-native";
 import Onboarding from "react-native-onboarding-swiper";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,14 +28,14 @@ const { width } = Dimensions.get("window");
 
 // Professional Delivery Palette
 const THEME = {
-  primary: "#FF8C00", // Energetic Orange
+  primary: "#BA3300", // Energetic Orange
   primaryDark: "#E67E00",
   secondary: "#2D2D2D", // Charcoal Professional
   bgLight: "#FFF5EB", // Soft Peach Tint
   textDark: "#1A1A1B",
   textMuted: "#707070",
   white: "#FFFFFF",
-  gradient: ["#FFDBB4", "#FFE6CC", "#FFE6CC", "#FFEFD6", "#FFF5EB", "#FFFFFF"],
+  gradient: ["#FFDBB4", "#FFE6CC", "#FFE6CC", "#FFEFD6", "#FFF5EB", "#FFFFFF",],
 };
 
 const Slides = [
@@ -166,11 +167,8 @@ export default function SignUp() {
               )}
               NextButtonComponent={({ ...props }) => (
                 <View style={styles.nextBtn}>
-                  <Ionicons
-                    name="arrow-forward"
-                    size={24}
-                    color={THEME.white}
-                    {...props}
+                  <Image
+                    source={require("../../../assets/icon/Avatar_Red.png")}
                   />
                 </View>
               )}
@@ -209,16 +207,15 @@ export default function SignUp() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.authHeader}>
-              <View style={styles.logoBadge}>
-                <FontAwesome5
-                  name="shipping-fast"
-                  size={24}
-                  color={THEME.white}
-                />
-              </View>
-              <Text style={styles.brandName}>Tona</Text>
+              <Text style={styles.brandName}>Tona Delivery</Text>
+
+              <Image
+                source={require("../../../assets/icon/Avatar_Red.png")}
+                style={{ width: 100, height: 100, resizeMode: "contain" }}
+              />
               <Text style={styles.authTitle}>Create Account</Text>
               <Text style={styles.authSubtitle}>
+                
                 Sign up to get your items moving
               </Text>
             </View>
@@ -380,7 +377,7 @@ const styles = StyleSheet.create({
   doneBtnText: { color: "#FFF", fontWeight: "800", fontSize: 16 },
 
   scrollContainer: { padding: 24, paddingTop: 40 },
-  authHeader: { marginBottom: 35, alignItems: "center" },
+  authHeader: { marginTop: 35, marginBottom: 35, alignItems: "center" },
   logoBadge: {
     width: 50,
     height: 50,
@@ -392,9 +389,10 @@ const styles = StyleSheet.create({
   },
   brandName: {
     fontSize: 38,
-    fontWeight: "900",
+    fontFamily: "Poppins-Bold",
     color: THEME.secondary,
     letterSpacing: -1,
+    marginBottom: 13
   },
   authTitle: {
     fontSize: 22,

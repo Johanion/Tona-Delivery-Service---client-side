@@ -6,7 +6,6 @@ import {
   FlatList,
   TouchableOpacity,
   StatusBar,
-  Dimensions,
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,17 +16,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { selectedOrderItems } from "../../atom";
 import { supabase } from "../../lib/supabase";
-
+import { insertPostFavouriteOrder } from "../../services/PostService";
+import { deletePostFavouriteOrder } from "../../services/DeleteService";
 import VendorCardSkelton from "../../skeleton/VendorCardSkelton";
 import ErrorState from "../../components/ErrorState";
 
 const OrderList = () => {
   const router = useRouter();
   const setOrderItems = useSetAtom(selectedOrderItems);
-
-  const { width } = Dimensions.get("window");
-  const { session, loading: authLoading } = useAuth();
-  console.log("Sesssssssssssssssssssionnsssssssssssssssss", session.user.id);
+  const { session } = useAuth();
 
   // get all orders detail and history
   const fetchUserOrders = async (userId) => {
@@ -69,21 +66,35 @@ const OrderList = () => {
     data: orders_history_data,
     isLoading,
     isError,
-    error,
     refetch,
   } = useQuery({
     queryKey: ["ordersHistory"],
     queryFn: () => fetchUserOrders(session.user.id),
+    enabled: !!session?.user?.id,
     refetchInterval: 5000, // Fetch every 10 seconds
     // Optional: only fetch if the user is actually looking at the screen
     refetchOnWindowFocus: true,
-    refetchOnWindowFocus: true,
     refetchOnMount: true,
     refetchOnReconnect: true,
-
-    // If you want the 5s timer to keep ticking while the app is in background:
-    refetchIntervalInBackground: true,
   });
+
+  const fetchFavouriteOrderIds = async (userId) => {
+    const { data, error } = await supabase
+      .from("favourites")
+      .select("order_id")
+      .eq("user_id", userId)
+      .not("order_id", "is", null);
+
+    if (error) throw error;
+    return data?.map((item) => item.order_id) || [];
+  };
+
+  const { data: favouriteOrderIds = [], refetch: refetchFavouriteOrders } =
+    useQuery({
+      queryKey: ["favouriteOrders", session?.user?.id],
+      queryFn: () => fetchFavouriteOrderIds(session.user.id),
+      enabled: !!session?.user?.id,
+    });
 
   if (isLoading) {
     return <VendorCardSkelton />;
@@ -101,7 +112,21 @@ const OrderList = () => {
   const handleOrderPress = (orderItem) => {
     setOrderItems(orderItem);
     router.push("/orderDetails");
-    console.log("orderItemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm.", orderItem);
+  };
+
+  // handling favourite per order
+  const handleFavourite = async (orderItem) => {
+    try {
+      if (favouriteOrderIds.includes(orderItem.id)) {
+        await deletePostFavouriteOrder(session.user.id, orderItem.id);
+        await refetchFavouriteOrders();
+        return;
+      }
+      await insertPostFavouriteOrder(session.user.id, orderItem.id);
+      await refetchFavouriteOrders();
+    } catch (error) {
+      console.error("Error adding favorite:", error.message);
+    }
   };
 
   const renderOrderItem = ({ item }) => {
@@ -122,6 +147,7 @@ const OrderList = () => {
     };
 
     const progress = calculateProgress();
+    const isFavourite = favouriteOrderIds.includes(item.id);
 
     // 2. Format the product summary (e.g., "Chicken Bucket + 2 more")
     const firstProductName =
@@ -139,20 +165,39 @@ const OrderList = () => {
         // Pass the whole item as a stringified param or just the ID
         onPress={() => handleOrderPress(item)}
       >
-        <View style={styles.dateBadge}>
-          <Feather
-            name="calendar"
-            size={12}
-            color="#A39495"
-            style={{ marginRight: 5 }}
-          />
-          <Text style={styles.dateText}>
-            {new Date(item.created_at).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
-          </Text>
+        <View style={styles.cardTop}>
+          {/* date section with calendar icon */}
+          <View style={styles.dateBadge}>
+            <Feather
+              name="calendar"
+              size={12}
+              color="#A39495"
+              style={{ marginRight: 5 }}
+            />
+            <Text style={styles.dateText}>
+              {new Date(item.created_at).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </Text>
+          </View>
+
+          {/* favourite section with heart icon  */}
+          <View style={styles.dateBadge}>
+            <TouchableOpacity
+              onPress={() => {
+                handleFavourite(item);
+              }}
+            >
+              <MaterialCommunityIcons
+                name={isFavourite ? "heart" : "heart-outline"}
+                size={19}
+                color={isFavourite ? "#FF3B5C" : "#A39495"}
+                style={{ marginLeft: 15 }}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.cardContent}>
@@ -226,7 +271,7 @@ const OrderList = () => {
                   item.is_dropped_off && styles.activeStep,
                 ]}
               >
-                Dropped
+                Delivered
               </Text>
             </View>
           </View>

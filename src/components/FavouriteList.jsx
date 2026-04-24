@@ -5,145 +5,133 @@ import {
   View,
   FlatList,
   TouchableOpacity,
-  Dimensions,
   Image,
 } from "react-native";
 import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSetAtom } from "jotai";
 import { selectedOrderAtom } from "../atom";
+import { selectedOrderItems } from "../atom";
 
-const { width } = Dimensions.get("window");
+
+const TYPE_META = {
+  products: {
+    label: "Product",
+    icon: "fast-food-outline",
+    iconColor: "#C95C1A",
+    iconBg: "#FFF1E7",
+    cta: "See item",
+    route: ""
+  },
+  vendors: {
+    label: "Vendor",
+    icon: "storefront-outline",
+    iconColor: "#A84A00",
+    iconBg: "#FFF3E2",
+    cta: "Open store",
+    route: ""
+  },
+  orders: {
+    label: "Order",
+    icon: "receipt-outline",
+    iconColor: "#0E8A72",
+    iconBg: "#E9FBF6",
+    cta: "View order",
+    route: ""
+  },
+};
+
+const formatPrice = (value) => {
+  if (value === null || value === undefined || value === "") return "Price unavailable";
+  return `${value} ETB`;
+};
+
+const formatDate = (value) => {
+  if (!value) return "Recent favourite";
+  return new Date(value).toLocaleDateString();
+};
 
 const FavouriteList = ({ data, type }) => {
   const router = useRouter();
-  const setOrderAtoms = useSetAtom(selectedOrderAtom);
+  const setOrderAtom = useSetAtom(selectedOrderAtom);
+  const meta = TYPE_META[type] || TYPE_META.products;
+  const setOrderItems = useSetAtom(selectedOrderItems);
 
-  const renderItem = ({ item }) => {
-    // --- 1. PRODUCT LAYOUT ---
-    if (type === "products") {
-      return (
-        <TouchableOpacity
-          style={styles.card}
-          activeOpacity={0.8}
-          onPress={() =>
-            router.push({
-              pathname: "/product-details",
-              params: { id: item.id },
-            })
-          }
-        >
-          <View style={styles.row}>
-            <Image
-              source={{
-                uri: item.image_url || "https://via.placeholder.com/150",
-              }}
-              style={styles.imageThumb}
-            />
-            <View style={styles.mainContent}>
-              <Text style={styles.titleText} numberOfLines={1}>
-                {item.name}
-              </Text>
-              <Text style={styles.descriptionText} numberOfLines={1}>
-                {item.description || "No description available"}
-              </Text>
-              <View style={styles.priceRow}>
-                <Text style={styles.priceText}>{item.price} ETB</Text>
-                <View style={styles.tag}>
-                  <Text style={styles.tagText}>Meal</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        </TouchableOpacity>
-      );
-    }
 
-    // --- 2. VENDOR LAYOUT ---
-    if (type === "vendors") {
-      return (
-        <TouchableOpacity
-          style={styles.card}
-          activeOpacity={0.8}
-          onPress={() =>
-            router.push({
-              pathname: "/vendor-details",
-              params: { id: item.id },
-            })
-          }
-        >
-          <View style={styles.row}>
-            <View style={[styles.iconCircle, { backgroundColor: "#FFF4E5" }]}>
-              <MaterialCommunityIcons
-                name="storefront"
-                size={24}
-                color="#FF9800"
-              />
-            </View>
-            <View style={styles.mainContent}>
-              <Text style={styles.titleText}>
-                {item.brand_name || item.name}
-              </Text>
-              <View style={styles.infoRow}>
-                <Feather name="map-pin" size={12} color="#999" />
-                <Text style={styles.subText}>
-                  {" "}
-                  {item.location || "Addis Ababa"}
-                </Text>
-              </View>
-            </View>
-            <Feather name="chevron-right" size={20} color="#CCC" />
-          </View>
-        </TouchableOpacity>
-      );
-    }
-
-    // --- 3. ORDER LAYOUT (Historical/Favorite Orders) ---
+  const handlePress = (item) => {
     if (type === "orders") {
-      return (
-        <TouchableOpacity
-          style={styles.orderCard}
-          activeOpacity={0.9}
-          onPress={() => {
-            setOrderAtoms(item);
-            router.push("../verify-assign-orders");
-          }}
-        >
-          <View style={styles.cardHeader}>
-            <View style={styles.idBadge}>
-              <Text style={styles.idText}>
-                #{item.id.slice(0, 8).toUpperCase()}
-              </Text>
-            </View>
-            <Text style={styles.timeText}>
-              {new Date(item.created_at).toLocaleDateString()}
-            </Text>
-          </View>
-
-          <View style={styles.orderBody}>
-            <View style={styles.orderIcon}>
-              <MaterialCommunityIcons
-                name="package-variant"
-                size={24}
-                color="#4CAF50"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.priceText}>
-                Total: {item.total_price} ETB
-              </Text>
-              <Text style={styles.subText}>
-                Status: {item.status || "Completed"}
-              </Text>
-            </View>
-            <TouchableOpacity style={styles.reorderBtn}>
-              <Text style={styles.reorderText}>View</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      );
+        setOrderItems(item);
+    router.push("/orderDetails");
     }
   };
+
+  const getTitle = (item) => {
+    if (type === "vendors") return item.brand_name || item.name || "Unnamed vendor";
+    if (type === "orders") return `Order #${item.id?.slice(0, 3).toUpperCase() || "00000000"}`;
+    return item.product_name || "Unnamed product";
+  };
+
+  const getSubtitle = (item) => {
+    if (type === "orders") return item.status || "Completed";
+    if (type === "products") return item.description || "No description available";
+  };
+
+
+  const renderVisual = (item) => {
+    if (type === "products") {
+      return (
+        <Image
+          source={{
+            uri: item.image || "https://via.placeholder.com/150",
+          }}
+          style={styles.imageThumb}
+        />
+      );
+    }
+
+    if (type === "vendors") {
+      return (
+        <Image
+          source={{
+            uri: item.image || "https://via.placeholder.com/150",
+          }}
+          style={styles.imageThumb}
+        />
+      );
+    }
+
+    return (
+      <View style={[styles.iconShell, { backgroundColor: meta.iconBg }]}>
+        <Ionicons name={meta.icon} size={24} color={meta.iconColor} />
+      </View>
+    );
+  };
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.88}
+      onPress={() => handlePress(item)}
+    >
+      <View style={styles.cardGlow} />
+
+      <View style={styles.cardBody}>
+        {renderVisual(item)}
+
+        <View style={styles.content}>
+          <Text style={styles.title} numberOfLines={1}>
+            {getTitle(item)}
+          </Text>
+
+          <Text style={styles.subtitle} numberOfLines={2}>
+            {getSubtitle(item)}
+          </Text>
+
+
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <FlatList
@@ -154,8 +142,11 @@ const FavouriteList = ({ data, type }) => {
       showsVerticalScrollIndicator={false}
       ListEmptyComponent={
         <View style={styles.emptyContainer}>
-          <Feather name="heart" size={50} color="#DDD" />
-          <Text style={styles.emptyText}>No favorite {type} yet</Text>
+          <View style={styles.emptyIconWrap}>
+            <Feather name="heart" size={34} color="#D8A38C" />
+          </View>
+          <Text style={styles.emptyTitle}>Nothing saved yet</Text>
+          <Text style={styles.emptyText}>Your favourite {type} will appear here.</Text>
         </View>
       }
     />
@@ -163,96 +154,162 @@ const FavouriteList = ({ data, type }) => {
 };
 
 const styles = StyleSheet.create({
-  listPadding: { padding: 16, paddingBottom: 100 },
+  listPadding: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 120,
+    gap: 14,
+  },
   card: {
-    backgroundColor: "#FFF",
-    borderRadius: 18,
-    padding: 12,
-    marginBottom: 12,
+    backgroundColor: "#FFFDF9",
+    borderRadius: 26,
+    padding: 16,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#F0F0F0",
+    borderColor: "#F6E7DA",
+    overflow: "hidden",
+    shadowColor: "#D98B5D",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    elevation: 6,
   },
-  row: { flexDirection: "row", alignItems: "center" },
-  imageThumb: {
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    backgroundColor: "#F8F9FA",
+  cardGlow: {
+    position: "absolute",
+    top: -20,
+    right: -10,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "#FFF0E4",
   },
-  mainContent: { flex: 1, marginLeft: 12 },
-  titleText: { fontSize: 16, fontWeight: "700", color: "#1A1A1A" },
-  descriptionText: { fontSize: 12, color: "#888", marginTop: 2 },
-  priceRow: {
+  cardTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 6,
+    marginBottom: 14,
   },
-  priceText: { fontSize: 15, fontWeight: "800", color: "#239BA7" },
-  tag: {
-    backgroundColor: "#FF3B5C15",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+  typePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "#FCEEE2",
+    borderWidth: 1,
+    borderColor: "#F4DAC9",
   },
-  tagText: {
-    color: "#FF3B5C",
-    fontSize: 10,
+  typePillText: {
+    fontSize: 11,
     fontWeight: "800",
+    color: "#B65D33",
+    letterSpacing: 0.8,
     textTransform: "uppercase",
   },
-  iconCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  cardBody: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  imageThumb: {
+    width: 82,
+    height: 82,
+    borderRadius: 22,
+    backgroundColor: "#F7F1EB",
+  },
+  iconShell: {
+    width: 82,
+    height: 82,
+    borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
   },
-  infoRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
-  subText: { fontSize: 13, color: "#666" },
-  // Order Specific
-  orderCard: {
-    backgroundColor: "#FFF",
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+  content: {
+    flex: 1,
+    marginLeft: 14,
   },
-  cardHeader: {
+  title: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#23160F",
+  },
+  subtitle: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 19,
+    color: "#7A6558",
+  },
+  metaRow: {
+    marginTop: 10,
+  },
+  metaBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: "#FFF5EC",
+    borderWidth: 1,
+    borderColor: "#F3E1D3",
+  },
+  metaBadgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#C5653E",
+  },
+  footerRow: {
+    marginTop: 12,
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    alignItems: "center",
+    gap: 12,
   },
-  idBadge: {
-    backgroundColor: "#F5F5F5",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  secondaryText: {
+    flex: 1,
+    fontSize: 12,
+    color: "#8A7568",
   },
-  idText: { fontSize: 11, fontWeight: "800", color: "#666" },
-  timeText: { fontSize: 12, color: "#999" },
-  orderBody: { flexDirection: "row", alignItems: "center" },
-  orderIcon: {
-    width: 44,
-    height: 44,
-    backgroundColor: "#E8F5E9",
-    borderRadius: 12,
+  cta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "#F4E4D8",
+  },
+  ctaText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#47311F",
+  },
+  emptyContainer: {
+    marginTop: 96,
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  emptyIconWrap: {
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+    backgroundColor: "#FFF2E8",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    borderWidth: 1,
+    borderColor: "#F7DECF",
   },
-  reorderBtn: {
-    backgroundColor: "#1A1A1A",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
+  emptyTitle: {
+    marginTop: 16,
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#35231A",
   },
-  reorderText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
-  emptyContainer: { marginTop: 100, alignItems: "center" },
-  emptyText: { marginTop: 10, color: "#BBB", fontSize: 16 },
+  emptyText: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#8B776A",
+    textAlign: "center",
+  },
 });
 
 export default FavouriteList;

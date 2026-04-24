@@ -25,7 +25,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { selectedPaymentEnd, totalAmount } from "../../atom.jsx";
 import { checkoutProductsAtom } from "../../atom.jsx";
-import { cartAtom } from "../../atom.jsx";
+import { cartAtom } from "../../atom.jsx";  
 
 const PaymentReceipstInsertion = () => {
   // user whow insert the payment data

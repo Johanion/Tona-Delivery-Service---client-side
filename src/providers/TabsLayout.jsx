@@ -14,7 +14,7 @@ const TabsLayout = () => {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: true,
-        tabBarActiveTintColor: "#FF6B00", // Vibrant orange
+        tabBarActiveTintColor: "#BA3300", // Vibrant orange
         tabBarInactiveTintColor: "#888888",
 
         // Custom floating pill tab bar

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Tona_Delivery_Service-Client_side",
+    "name": "Tona Delivery",
     "slug": "Tona_Delivery_Service-Client_side",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,9 +16,8 @@
       "package": "com.zionohannes.Tona_Delivery_ServiceClient_side",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/icon/Avatar_Red.png",
+        "monochromeImage": "./assets/icon/Avatar_Red.png"
       },
       "edgeToEdgeEnabled": true,
       "config": {
@@ -48,7 +47,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/icon/Avatar_Red.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",

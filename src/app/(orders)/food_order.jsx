@@ -15,7 +15,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useAtom } from "jotai";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import { Feather } from "@expo/vector-icons";
+import { useAuth } from "../../providers/AuthProvider";
+import {
+  Feather,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 
 import { supabase } from "../../lib/supabase";
 import { VendorId } from "../../atom";
@@ -25,7 +30,11 @@ import { cartAtom, addToCartAtom, removeFromCartAtom } from "../../atom";
 import VendorCardSkelton from "../../skeleton/VendorCardSkelton.jsx";
 import ErrorState from "../../components/ErrorState.jsx";
 
+import { insertFavouriteProduct } from "../../services/PostService";
+import { deletePostFavouriteProduct } from "../../services/DeleteService";
+
 const FoodOrder = () => {
+  const { session } = useAuth();
   const [cart] = useAtom(cartAtom);
   const [, addToCart] = useAtom(addToCartAtom);
   const [, removeFromCart] = useAtom(removeFromCartAtom);
@@ -54,17 +63,36 @@ const FoodOrder = () => {
   // TanStack Query Hook
   const {
     data: products,
-    isLoading,
+    isLoading: productLoading,
     isError,
-    error,
-    refetch
+    error: productLoadError,
+    refetch,
   } = useQuery({
     queryKey: ["products"],
     queryFn: () => fetchProductsByVendors(vendorId),
     enabled: !!vendorId, // Only run if we have an ID
   });
 
-  if (error) {
+  // get favourite orders for this product and user_id
+  const fetchFavouriteProductIds = async (userId) => {
+    const { data, error } = await supabase
+      .from("favourites")
+      .select("product_id")
+      .eq("user_id", userId)
+      .not("product_id", "is", null);
+
+    if (error) throw error;
+    return data?.map((item) => item.product_id) || [];
+  };
+
+  const { data: favouriteProductIds = [], refetch: refetchFavouriteProducts } =
+    useQuery({
+      queryKey: ["favouriteProducts", session?.user?.id],
+      queryFn: () => fetchFavouriteProductIds(session.user.id),
+      enabled: !!session?.user?.id,
+    });
+
+  if (productLoadError) {
     return (
       <ErrorState
         title="Fetch Failed"
@@ -73,7 +101,7 @@ const FoodOrder = () => {
     );
   }
 
-  if (isLoading) {
+  if (productLoading) {
     return <VendorCardSkelton />;
   }
 
@@ -88,8 +116,24 @@ const FoodOrder = () => {
     return item ? item.amount : 0;
   };
 
+  // handling favourite per order
+  const handleFavourite = async (product_id) => {
+    try {
+      if (favouriteProductIds.includes(product_id)) {
+        await deletePostFavouriteProduct(product_id, session.user.id);
+        await refetchFavouriteProducts();
+        return;
+      }
+      await insertFavouriteProduct(session.user.id, product_id);
+      await refetchFavouriteProducts();
+    } catch (error) {
+      console.error("Error adding favorite:", error.message);
+    }
+  };
+
   const renderItem = ({ item }) => {
     const quantity = getQuantity(item.id);
+    const isFavourite = favouriteProductIds.includes(item.id);
 
     return (
       <View style={styles.card}>
@@ -108,9 +152,20 @@ const FoodOrder = () => {
             <View>
               <View style={styles.headerRow}>
                 <Text style={styles.categoryLabel}>{vendorName}</Text>
-                <View style={styles.ratingBadge}>
-                  <Feather name="star" size={10} color="#FFB800" />
-                  <Text style={styles.ratingText}>4.8</Text>
+                {/* favourite section with heart icon  */}
+                <View style={styles.dateBadge}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      handleFavourite(item.id);
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name={isFavourite ? "heart" : "heart-outline"}
+                      size={19}
+                      color={isFavourite ? "#FF3B5C" : "#A39495"}
+                      style={{ marginLeft: 15 }}
+                    />
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -163,19 +218,19 @@ const FoodOrder = () => {
   return (
     <View style={styles.mainContainer}>
       <StatusBar barStyle="dark-content" />
-        <SafeAreaView edges={["top"]} style={styles.header}>
-          <View style={styles.headerContent}>
-            <View>
-              <Text style={styles.welcomeText}>Good afternoon 👋</Text>
-              <Text style={styles.brandTitle}>
-                Deliciously <Text style={styles.accentText}>Yours</Text>
-              </Text>
-            </View>
-            <TouchableOpacity style={styles.iconButton}>
-              <Feather name="search" size={22} color="#121212" />
-            </TouchableOpacity>
+      <SafeAreaView edges={["top"]} style={styles.header}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.welcomeText}>Good afternoon 👋</Text>
+            <Text style={styles.brandTitle}>
+              Deliciously <Text style={styles.accentText}>Yours</Text>
+            </Text>
           </View>
-        </SafeAreaView>
+          <TouchableOpacity style={styles.iconButton}>
+            <Feather name="search" size={22} color="#121212" />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
 
       <FlatList
         data={products}
@@ -432,6 +487,16 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginRight: 6,
     fontSize: 14,
+  },
+  dateBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF5F6", // Very light grey
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginBottom: 11,
+    alignSelf: "flex-end",
   },
 });
 

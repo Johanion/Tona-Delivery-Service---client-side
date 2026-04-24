@@ -17,11 +17,12 @@ import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { selectedOrderItems } from "../../atom";
 import QRCode from "react-native-qrcode-svg";
-import { session, isLoading } from "../../providers/AuthProvider";
+import { useAuth } from "../../providers/AuthProvider";
 
 const { width } = Dimensions.get("window");
 
 const OrderDetail = () => {
+  const {session, isLoading} = useAuth()
   const router = useRouter();
   const order = useAtomValue(selectedOrderItems);
   const qrData = JSON.stringify({
@@ -357,7 +358,7 @@ const styles = StyleSheet.create({
   totalLabel: { fontSize: 16, fontWeight: "800", color: "#111827" },
   totalValue: { fontSize: 22, fontFamily: "Poppins-Bold", color: "#E0115F" },
 
-  qrContainer: { marginTop: 30, alignItems: "center", paddingHorizontal: 40 },
+  qrContainer: { marginTop: 30, alignItems: "center", paddingHorizontal: 24 },
   qrTitle: { fontSize: 18, fontWeight: "800", color: "#111827" },
   qrDescription: {
     fontSize: 13,
@@ -376,6 +377,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 15,
   },
+  qrInner: {
+    alignItems: "center",
+    width: "100%",
+    maxWidth: 320,
+  },
+
   qrCornerTopLeft: {
     position: "absolute",
     top: 15,
@@ -434,6 +441,24 @@ const styles = StyleSheet.create({
   },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: 12, color: "#9CA3AF", fontWeight: "600" },
+  qrTextContent: {
+    width: "100%",
+    marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    paddingHorizontal: 4,
+  },
+  qrDesc: {
+    flex: 1,
+    flexShrink: 1,
+    fontSize: 12,
+    color: "#64748B",
+    lineHeight: 16,
+    marginLeft: 10,
+    textAlign: "left",
+  },
+
 });
 
 export default OrderDetail;

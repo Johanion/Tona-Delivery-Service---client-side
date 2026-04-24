@@ -12,6 +12,7 @@ import {
   Platform,
   StatusBar,
   Dimensions,
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
@@ -21,11 +22,10 @@ import { useRouter } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../providers/AuthProvider";
 
-
 const { width } = Dimensions.get("window");
 
 const THEME = {
-  primary: "#FF8C00", // Consistent Action Orange
+  primary: "#BA3300", // Consistent Action Orange
   secondary: "#2D2D2D", // Professional Charcoal
   textMuted: "#707070",
   white: "#FFFFFF",
@@ -87,14 +87,11 @@ export default function LogIn() {
           >
             {/* Header Section with Animated-style Icon */}
             <View style={styles.headerSection}>
-              <View style={styles.logoContainer}>
-                <FontAwesome5
-                  name="shipping-fast"
-                  size={28}
-                  color={THEME.white}
-                />
-              </View>
-              <Text style={styles.brandName}>Tona</Text>
+              <Text style={styles.brandName}>Tona Delivery</Text>
+              <Image
+                source={require("../../../assets/icon/Avatar_Red.png")}
+                style={{ width: 100, height: 100, resizeMode: "contain" }}
+              />
               <Text style={styles.welcomeTitle}>Welcome Back</Text>
               <Text style={styles.welcomeSubtitle}>
                 Sign in to get your items moving
@@ -197,7 +194,6 @@ export default function LogIn() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 60,
     paddingBottom: 40,
     flexGrow: 1,
     justifyContent: "center",
@@ -220,11 +216,12 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  brandName: {
-    fontSize: 36,
-    fontWeight: "900",
+ brandName: {
+    fontSize: 38,
+    fontFamily: "Poppins-Bold",
     color: THEME.secondary,
     letterSpacing: -1,
+    marginBottom: 13
   },
   welcomeTitle: {
     fontSize: 24,
@@ -302,7 +299,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 15,
     elevation: 8,
-    marginBottom: 20
+    marginBottom: 20,
   },
   btnDisabled: {
     backgroundColor: "#D1D5DB",
